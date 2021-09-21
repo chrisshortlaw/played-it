@@ -57,12 +57,19 @@ class Game(DocumentTemplate):
 
 
 class Publisher(DocumentTemplate):
+    """
+    Class for Publisher Document
+    Key is LexicalKey which is taken from 'name' field
+    Fields: name: str, label: str
+    name: should have the pattern: 'devolver_digital, sony_computer_entertainment' -> lowercase, snake_case
+    label: Regular spelling.
+    """
     _schema = schema
     _key = LexicalKey(['name'])
     label: str
     name: str
 
 if __name__ == "__main__":
-    client.connect(user=user, team=team, db="played_it_db", use_token=True) 
-    schema.commit(client, commit_msg="Changed publisher schema. Added 'key_name'. ")
+    client.connect(user=user, team=team, db="new_test_db", use_token=True) 
+    schema.commit(client, commit_msg="Initial Commit")
 
