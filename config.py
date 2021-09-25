@@ -2,6 +2,8 @@
 
 import os
 from terminusdb_client import WOQLClient
+if os.path.exists('env.py'):
+    import env
 
 class Config(object):
 
