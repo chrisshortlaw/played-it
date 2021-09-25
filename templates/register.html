@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+  {% block content %}
+    <section class="hero is-success is-fullheight">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <div class="column is-4 is-offset-4">
+                    <h3 class="title has-text-black">Register</h3>
+                    <hr class="login-hr">
+                    <p class="subtitle has-text-black">Register to use this App</p>
+                    <div class="box">
+                        <figure class="avatar">
+                            <img src="https://placehold.it/128x128">
+                        </figure>
+                        <form action="POST" action="{{ url_for('register') }}">
+                          <p class="subtitle has-text-black">Enter your Email</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.email(size=32) }}
+                            </div>
+                          </div>
+                          <p class="subtitle has-text-black">Enter a Username</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.username(size=32) }}
+                            </div>
+                          </div>
+                          <p class="subtitle has-text-black">Enter a password</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.password(size=32) }}
+                            </div>
+                          </div>
+                          <p class="subtitle has-text-black">Confirm password</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.confirm(size=32) }}
+                            </div>
+                          </div>
+                              {{ form.submit() }}
+                        </div>
+                        </form>
+                    </div>
+                    <p class="has-text-grey">
+                    <a href="{{ url_for('login') }}">Login</a> &nbsp;·&nbsp;
+                        <a href="../">Forgot Password</a> &nbsp;·&nbsp;
+                        <a href="../">Need Help?</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+  {% endblock %}
+  

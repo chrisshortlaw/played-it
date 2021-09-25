@@ -1,15 +1,14 @@
 {% extends "base.html" %}
-
 {% block content %}
 	<p>Hello World!</p>
-	{% for doc in documents %}
+	
 
 	<div class="card">
 	  <div class="card-content">
 	    <div class="media">
 	      <div class="media-content">
-		      <p class="title is-4">{{ doc.name }}</p>
-		      <p class="subtitle is-6">{{ doc.email }}</p>
+          <p class="title is-4">{{ documents.name }}</p>
+          <p class="subtitle is-6">{{ documents.label }}</p>
 	      </div>
 	    </div>
 
@@ -20,6 +19,5 @@
 	  </div>
 	</div>
 
-	{% endfor %}
 
 {% endblock content %}
