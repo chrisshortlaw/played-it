@@ -7,23 +7,25 @@ if os.path.exists("env.py"):
 #from models import User
 from forms import LoginForm, RegisterForm
 from config import Config
+from models import played_it_db
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
+played_it_db.db_connect()
 
-user = 'chris'
-team = 'team_of_me'
-endpoint = f"https://cloud.terminusdb.com/{team}/"
-client = WOQLClient(endpoint)
+# user = 'chris'
+# team = 'team_of_me'
+# endpoint = f"https://cloud.terminusdb.com/{team}/"
+# client = WOQLClient(endpoint)
 
 
-client.connect(user=user, team=team, db="new_test_db", use_token=True)
+# client.connect(user=user, team=team, db="new_test_db", use_token=True)
 
 
 @app.route("/")
 def main():
-    documents = client.get_document('Publisher/10tacle_studios')
+    documents = played_it_db.client.get_document('Publisher/10tacle_studios')
     print(documents)
     return render_template("main.html", title="Main", documents=documents)
 
@@ -31,10 +33,17 @@ def main():
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if request.method == 'POST':
-    #    username = request.form.get('username')
-    #   NOTE: Remove this Print Statement
-        print("Login Form Post Succesful")
+    if form.validate_on_submit():
+        user_list = list(played_it_db.client.query_document({"@type": "User", "name" : f"{form.username.data}"}))
+        print(user_list)
+        if len(user_list) == 1:
+            if user_list[0]['password'] == f"{form.password.data}":
+                flash(f"{user_list[0]['name']} has successfully logged in!")
+                return redirect(url_for('main'))
+            else:
+                flash('Incorrect Password')
+        else:
+            flash('Username Incorrect')
     return render_template("login.html", title="Sign In", form=form)
 
 

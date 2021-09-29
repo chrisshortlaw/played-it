@@ -5,10 +5,24 @@ from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey,
 from typing import Set
 if os.path.exists("env.py"):
     import env
-user = 'chris'
-team = 'team_of_me'
-endpoint = f"https://cloud.terminusdb.com/{team}/"
-client = WOQLClient(endpoint)
+
+
+class DBClient:
+
+    def __init__(self, user, team, uri, db):
+        self.user = user
+        self.team = team
+        self.uri = uri 
+        self.endpoint = f"{self.uri}{self.team}/"
+        self.client = WOQLClient(self.endpoint)
+        self.db = db
+
+    def db_connect(self):
+        self.client.connect(user=self.user, team=self.team, db=self.db, use_token=True)
+
+
+played_it_db = DBClient('chris', 'team_of_me', 'https://cloud.terminusdb.com/', 'new_test_db')
+
 
 schema = WOQLSchema()
 
@@ -73,6 +87,7 @@ class Publisher(DocumentTemplate):
     label: str
     name: str
 
+
 class Review(DocumentTemplate):
     """
     _key = HashKey(['title', 'author'])
@@ -91,10 +106,10 @@ class Review(DocumentTemplate):
     game: Set['Game']
     author: Set['User']
     text: str
-    pub-date: int
+    pub_date: int
 
 
 if __name__ == "__main__":
-    client.connect(user=user, team=team, db="new_test_db", use_token=True) 
-    schema.commit(client, commit_msg="Initial Commit")
+    played_it_db.db_connect()
+    schema.commit(DBClient.client, commit_msg="Updated User, Added Review")
 
