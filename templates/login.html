@@ -11,15 +11,22 @@
                         <figure class="avatar">
                             <img src="https://placehold.it/128x128">
                         </figure>
-                        <form action="POST" action="{{ url_for('login') }}">
+                        <form method="POST" action="{{ url_for('login') }}">
+                          {{ form.hidden_tag() }}
                           <div class="field">
                             <div class="control">
                               {{ form.username(size=32) }}
+                              {% for error in form.username.errors %}
+                              <span class="has-text-danger">{{ error }}</span>
+                              {% endfor %}
                             </div>
                           </div>
                           <div class="field">
                             <div class="control">
                               {{ form.password(size=32) }}
+                              {% for error in form.password.errors %}
+                              <span class="has-text-danger">{{ error }}</span>
+                              {% endfor %}
                             </div>
                           </div>
                           <div class="control">
