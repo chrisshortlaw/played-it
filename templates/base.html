@@ -6,7 +6,11 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 	{% block styles %}
 	{% endblock %}
+  {% if title %}
   <title> Played It | {{ title }} </title>
+  {% else %}
+  <title>Should I Play This?</title>
+  {% endif %}
 </head>
 <body>
 	<header>
@@ -70,10 +74,22 @@
 		</div>
 	</nav>
 	</header>
-	<main>
-		{% block content %}
-		{% endblock content %}
-	</main>
+  <main>
+    <div>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+      {% block content %}
+      {% endblock content %}
+    </main>
 	<script src="{{url_for('static', filename='js/script.js')}}"></script>
 
 	{% block scripts %}
