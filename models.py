@@ -3,6 +3,7 @@ import os
 from terminusdb_client import WOQLClient
 from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey, RandomKey
 from typing import Set
+from werkzeug.security import check_password_hash, generate_password_hash 
 if os.path.exists("env.py"):
     import env
 
@@ -29,14 +30,43 @@ schema = WOQLSchema()
 class User(DocumentTemplate):
     """
     Class of user.
-    TODO: Add login, password(hashed), etc.
+    TODO: Add ability to like reviews, follow other Users and be followed.
+    Schema: 
+        _key = LexicalKey['email'] - this should be unique and work for lexical key
+        name: Username chosen by User
+        _password: set with self.password
+        played_games: A Set of Documents the User has played. Added by User either after registration (TODO) or via a page on app
+        reviews: List of reviews written by User. Reviews related to games
     """
     _schema = schema
     _key = LexicalKey(['email'])
     name : str
     email : str
-    password: str
+    _password: str
     played_games: Set['Game']
+    reviews: Set['Review']
+    
+    @property
+    def password(self) -> str:
+        return self._password
+
+    @password.setter
+    def password(self, password_string: str) -> None:
+        """
+        To be used by User to change password
+        runs password_string through the generate_password_hash function
+        sets the User password as the newly hashed & salted string
+        """
+        hashed_pass = generate_password_hash(password_string, method='pbkdf2:sha256', salt_length=16)
+        self._password = hashed_pass
+
+    def check_pass(self, password_string: str) -> bool:
+        """
+        To be used for login verification
+        Checks hashed pass against password_string and returns True if match, false otherwise
+        """
+        return check_password_hash(self.password(), password_string)
+    
 
 
 class Game(DocumentTemplate):
@@ -111,5 +141,5 @@ class Review(DocumentTemplate):
 
 if __name__ == "__main__":
     played_it_db.db_connect()
-    schema.commit(DBClient.client, commit_msg="Updated User, Added Review")
+    schema.commit(played_it_db.client, commit_msg="Uptd User, + _password methods")
 
