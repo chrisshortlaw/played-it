@@ -32,10 +32,13 @@
 				<a class="navbar-item">
 				Home
 				</a>
-
-				<a class="navbar-item">
-				Documentation
+        {% if session['username'] %}
+        <a href={{ url_for('profile', username=session['username']) }} class="navbar-item">
+				Profile
 				</a>
+        {% else %}
+
+        {% endif %}
 
 				<div class="navbar-item has-dropdown is-hoverable">
 					<a class="navbar-link">
@@ -64,12 +67,21 @@
           {% if session['username'] %}
             <div>Welcome, {{session['username']}}</div>
           {% else %}
-            <div>You are not logged in.</p>
+            <div>You are not logged in.</div>
           {% endif %}
         </div>
-        <div class="navbar-item">  
+          {% if session['username'] %}
+          <div class="navbar-item">
+            <div class="buttons">
+              <a href="{{ url_for('logout') }}" class="button is-primary">
+                Logout
+              </a>
+            </div>
+          </div>
+          {% else %}
+        <div class="navbar-item">
           <div class="buttons">
-            <a href="{{ url_for('register') }}"class="button is-primary">
+            <a href="{{ url_for('register') }}" class="button is-primary">
             <strong>Sign up</strong>
             </a>
             <a href="{{ url_for('login') }}" class="button is-light">
@@ -77,9 +89,9 @@
             </a>
           </div>
         </div>
-				</div>
-			</div>
-		</div>
+          {% endif %}
+      </div>
+    </div>
 	</nav>
 
 	</header>
