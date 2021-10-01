@@ -61,35 +61,46 @@
 
 			<div class="navbar-end">
 				<div class="navbar-item">
-				<div class="buttons">
-          <a href="{{ url_for('register') }}"class="button is-primary">
-				    <strong>Sign up</strong>
-				  </a>
-          <a href="{{ url_for('login') }}" class="button is-light">
-				    Log in
-				  </a>
-				</div>
+          {% if session['username'] %}
+            <div>Welcome, {{session['username']}}</div>
+          {% else %}
+            <div>You are not logged in.</p>
+          {% endif %}
+        </div>
+        <div class="navbar-item">  
+          <div class="buttons">
+            <a href="{{ url_for('register') }}"class="button is-primary">
+            <strong>Sign up</strong>
+            </a>
+            <a href="{{ url_for('login') }}" class="button is-light">
+            Log in
+            </a>
+          </div>
+        </div>
 				</div>
 			</div>
 		</div>
 	</nav>
+
 	</header>
   <main>
-    <div>
+    <div class="container">
       {% with messages = get_flashed_messages() %}
       {% if messages %}
-      <ul>
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-      {% endwith %}
+      <div class="notification is-primary">
+        <ul class="flashes">
+          {% for message in messages %}
+          <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+        {% endif %}
+        {% endwith %}
     </div>
 
       {% block content %}
       {% endblock content %}
-    </main>
+  </main>
 	<script src="{{url_for('static', filename='js/script.js')}}"></script>
 
 	{% block scripts %}
