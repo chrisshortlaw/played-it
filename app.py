@@ -42,11 +42,10 @@ def login():
     if form.validate_on_submit():
         user_id = str(form.username.data).replace('@','%40')
         user_list = list(played_it_db.client.query_document({"@type": "User", "@id": f"User/{user_id}"}))
-        print(user_list)
-       # user_list = list(played_it_db.client.query_document({"@type": "User", "name" : f"{form.username.data}"}))
         if len(user_list) == 1:
             if check_password_hash(user_list[0]['_password'], form.password.data):
                 session['username'] = user_list[0]['name']
+                session['email'] = user_list[0]['email']
                 flash(f"{user_list[0]['name']} has successfully logged in!")
                 return redirect(url_for('main'))
             else:
@@ -86,6 +85,7 @@ def register():
             else:
                 flash(f'New User: {form.username.data} has been successfully registered.')
                 session['username'] = form.username.data 
+                session['email'] = form.email.data
                 return redirect(url_for('main'))
     else:
         print('Registration form did not validate')
@@ -93,6 +93,36 @@ def register():
     return render_template("register.html", title="Registration", form=form)
 
 
+@app.route('/user/<username>')
+def profile(username):
+    """
+    If statement prevents access to profile unless logged in. Consider using session cookie to hold boolean value - .is_logged_in
+    """
+    if 'username' in session:  
+        if session['username'] == username:       
+            try:
+                user = list(played_it_db.client.query_document({"@type": "User", "name": username}))[0]
+            except Exception as e: 
+                print(e)
+                flash('Email Incorrect')
+                return redirect(url_for('login'))
+            else:
+                posts = [{'author': user['name'], 'body': 'Test Post 1'}, {'author': user['name'], 'body': 'Test Post 2'}]
+                return render_template("user.html", user=user, posts=posts)
+        else:
+            flash('Oops. Something went wrong. Please log in to continue')
+            session.pop('username', default=None)
+            return redirect(url_for('login'))
+    else:
+        flash('Please log in to access user profile')
+        return redirect(url_for('login'))
+
+@app.route('/logout')
+def logout():
+    session.pop('username')
+    session.pop('email')
+    flash('Successfully Logged Out.')
+    return redirect((url_for('main')))
 if __name__ == "__main__":
     app.run(host=os.environ.get("IP"),
             port=int(os.environ.get("PORT")),
