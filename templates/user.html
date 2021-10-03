@@ -1,15 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="tile is-ancestor">
-  <div class="tile is-parent">
-    {% for post in posts %}
-    <div class="tile is-child box">
-      <p class="title is-4">{{ post['author'] }}</p>
-      <p class="content">{{ post['body'] }}</p>
+<div class="section">
+  <div class="tile is-ancestor">
+    <div class="tile is-parent">
+      {% for post in posts %}
+      <div class="tile is-child box">
+        <p class="title is-4">{{ post['author'] }}</p>
+        <p class="content">{{ post['body'] }}</p>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
   </div>
 </div>
+
+<div class="section has-background-info">
+  <div class="tile is-ancestor">
+    <div class="tile is-parent">
+      {% for game in games %}
+      <div class="tile is-child box">
+        <p class="title is-3">{{ game['@id'] }}
+        <p class="title is-4">{{ game['name'] }}</p>
+        <p class="content">{{ game['publisher'] }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 
 {% endblock %}
