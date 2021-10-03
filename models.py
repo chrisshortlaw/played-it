@@ -1,31 +1,19 @@
-#!Python3
-import os
-from terminusdb_client import WOQLClient
+#!Python3.9
+from typing import TypeVar, Type, Set
+
 from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey, RandomKey
-from typing import Set
 from werkzeug.security import check_password_hash, generate_password_hash 
-if os.path.exists("env.py"):
-    import env
 
+from database import played_it_db
 
-class DBClient:
-
-    def __init__(self, user, team, uri, db):
-        self.user = user
-        self.team = team
-        self.uri = uri 
-        self.endpoint = f"{self.uri}{self.team}/"
-        self.client = WOQLClient(self.endpoint)
-        self.db = db
-
-    def db_connect(self):
-        self.client.connect(user=self.user, team=self.team, db=self.db, use_token=True)
-
-
-played_it_db = DBClient('chris', 'team_of_me', 'https://cloud.terminusdb.com/', 'new_test_db')
+Game = TypeVar('Game')
+User = TypeVar('User')
+Publisher = TypeVar('Publisher')
+Review = TypeVar('Review')
 
 
 schema = WOQLSchema()
+
 
 class User(DocumentTemplate):
     """
@@ -49,7 +37,7 @@ class User(DocumentTemplate):
     @property
     def password(self) -> str:
         return self._password
-
+    
     @password.setter
     def password(self, password_string: str) -> None:
         """
@@ -66,7 +54,23 @@ class User(DocumentTemplate):
         Checks hashed pass against password_string and returns True if match, false otherwise
         """
         return check_password_hash(self.password(), password_string)
+
+    @classmethod
+    def create_pass(cls, password: str) -> str:
+        hashed_pass = generate_password_hash(password_string, method='pbkdf2:sha256', salt_length=16)
+        return hashed_pass
+        
+    @classmethod
+    def create_username(cls, username: str) -> str:
+        pass
     
+    @classmethod
+    def create_user(cls: Type[User], password: str, name:str, email:str, played_games: set['Game'] = set(), reviews: set['Review'] = set()) -> User:
+       # if name == name:        # insert Regex here
+        #    pass
+        #else:             
+        hashed_pass = create_pass(password)
+        return cls(name=name, email=email, _password=hashed_pass, played_games=played_games, reviews=reviews)
 
 
 class Game(DocumentTemplate):
@@ -91,17 +95,21 @@ class Game(DocumentTemplate):
     _schema = schema
     _key = LexicalKey(['name', 'platform'])
     name: str
-    label: str
+    title: str
     platform: str
-    rank: int
     year: int
     genre: str
     publisher: Set['Publisher'] 
-    na_sales: float
-    eu_sales: float
-    jp_sales: float
-    other_sales: float
-    global_sales: float
+
+    @classmethod
+    def create_name(cls: Type[Game], label: str) -> str:
+        name = label.lowercase().replace(" ", "_")
+        return name
+
+    @classmethod
+    def create_game(cls: Type[Game], title: str, platform: str, year: int, genre: str, publisher: Type[Publisher]) -> Game:
+        name = cls.create_name(title)
+        return cls(name=name, title=title, platform=platform, year=year, genre=genre, publisher=publisher)
 
 
 class Publisher(DocumentTemplate):
@@ -114,8 +122,13 @@ class Publisher(DocumentTemplate):
     """
     _schema = schema
     _key = LexicalKey(['name'])
-    label: str
+    title: str
     name: str
+
+    @classmethod
+    def create_publisher(cls, title):
+        name = str(title).replace(" ", "_").lower()
+        return cls(title=title, name=name)
 
 
 class Review(DocumentTemplate):
@@ -136,10 +149,10 @@ class Review(DocumentTemplate):
     game: Set['Game']
     author: Set['User']
     text: str
-    pub_date: int
+    pub_date: int 
 
 
 if __name__ == "__main__":
     played_it_db.db_connect()
-    schema.commit(played_it_db.client, commit_msg="Uptd User, + _password methods")
+    schema.commit(played_it_db.client, commit_msg='Test Commit: Is this working?')
 
