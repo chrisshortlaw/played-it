@@ -24,7 +24,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In', render_kw={"class": "button is-block is-info is-large is-fullwidth"})
     
 
-class RegisterForm(FlaskForm):]
+class RegisterForm(FlaskForm):
     """
     Registration Form for App.
     Fields: 
