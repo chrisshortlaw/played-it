@@ -1,7 +1,7 @@
 #!python3
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, DateField, TextAreaField
 from wtforms.validators import DataRequired, ValidationError, EqualTo, InputRequired, Email
 from wtforms.fields.html5 import EmailField
 
@@ -24,7 +24,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In', render_kw={"class": "button is-block is-info is-large is-fullwidth"})
     
 
-class RegisterForm(FlaskForm):
+class RegisterForm(FlaskForm):]
     """
     Registration Form for App.
     Fields: 
@@ -48,6 +48,7 @@ class AddGameForm(FlaskForm):
     genre = StringField('Genre', validators=[DataRequired()], default="unknownGenre", render_kw={"class": "input", "placeholder": "Enter Genre"})
     publisher = StringField('Publisher', validators=[DataRequired()], default="unknownPub", render_kw={"class": "input", "placeholder": "Enter Genre"})
     submit = SubmitField('Add Game', render_kw={"class": "button is-block is-info is-large is-fullwidth"})
+
 
 class ReviewForm(FlaskForm):
     title = StringField('title', validators=[DataRequired()], render_kw={"class": "input", "placeholder": "Title"})
