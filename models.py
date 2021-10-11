@@ -1,15 +1,14 @@
 #!Python3.9
-from typing import TypeVar, Type, Set
+from typing import Type, Set
+import os
 
 from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey, RandomKey
 from werkzeug.security import check_password_hash, generate_password_hash 
 
 from database import played_it_db
+if os.path.exists('env.py'):
+    import env
 
-Game = TypeVar('Game')
-User = TypeVar('User')
-Publisher = TypeVar('Publisher')
-Review = TypeVar('Review')
 
 
 schema = WOQLSchema()
@@ -27,7 +26,7 @@ class User(DocumentTemplate):
         reviews: List of reviews written by User. Reviews related to games
     """
     _schema = schema
-    _key = LexicalKey(['email'])
+    _key = HashKey(['email', 'name'])
     name : str
     email : str
     _password: str
@@ -35,11 +34,11 @@ class User(DocumentTemplate):
     reviews: Set['Review']
     
     @property
-    def password(self) -> str:
+    def password(self):
         return self._password
     
     @password.setter
-    def password(self, password_string: str) -> None:
+    def password(self, password_string):
         """
         To be used by User to change password
         runs password_string through the generate_password_hash function
@@ -48,7 +47,7 @@ class User(DocumentTemplate):
         hashed_pass = generate_password_hash(password_string, method='pbkdf2:sha256', salt_length=16)
         self._password = hashed_pass
 
-    def check_pass(self, password_string: str) -> bool:
+    def check_pass(self, password_string):
         """
         To be used for login verification
         Checks hashed pass against password_string and returns True if match, false otherwise
@@ -56,16 +55,20 @@ class User(DocumentTemplate):
         return check_password_hash(self.password(), password_string)
 
     @classmethod
-    def create_pass(cls, password: str) -> str:
+    def create_pass(cls, password):
+        """
+        Uses werkzeug built in password hash to generate a hashed pass and return it
+        """
         hashed_pass = generate_password_hash(password_string, method='pbkdf2:sha256', salt_length=16)
         return hashed_pass
         
-    @classmethod
-    def create_username(cls, username: str) -> str:
-        pass
+  #  @classmethod
+   # def create_username(cls, username):
+    #    """Creates a valid username or converts an invalid type to a valid type"""
+     #   pass
     
     @classmethod
-    def create_user(cls: Type[User], password: str, name:str, email:str, played_games: set['Game'] = set(), reviews: set['Review'] = set()) -> User:
+    def create_user(cls, password, name, email, played_games = set(), reviews = set()):
        # if name == name:        # insert Regex here
         #    pass
         #else:             
@@ -82,34 +85,30 @@ class Game(DocumentTemplate):
     NOTE: label is natural case
     label -> str
     platform -> str
-    rank -> int
     year -> int
     genre -> str
     publisher -> set(Publisher)
-    na_sales -> float
-    eu_sales -> float
-    jp_sales -> float
-    other_sales -> float
-    global_sales -> float
+    reviews -> Set['review']
     """
     _schema = schema
     _key = LexicalKey(['name', 'platform'])
     name: str
-    title: str
+    label: str
     platform: str
     year: int
     genre: str
-    publisher: Set['Publisher'] 
+    publisher: Set['Publisher']
+    reviews: Set['Review']
 
     @classmethod
-    def create_name(cls: Type[Game], label: str) -> str:
-        name = label.lowercase().replace(" ", "_")
+    def create_name(cls, label):
+        name = label.lower().replace(" ", "_")
         return name
 
     @classmethod
-    def create_game(cls: Type[Game], title: str, platform: str, year: int, genre: str, publisher: Type[Publisher]) -> Game:
-        name = cls.create_name(title)
-        return cls(name=name, title=title, platform=platform, year=year, genre=genre, publisher=publisher)
+    def create_game(cls, label, platform, year, genre, publisher, reviews=set()):
+        name = cls.create_name(label)
+        return cls(name=name, label=label, platform=platform, year=year, genre=genre, publisher=publisher, reviews=reviews)
 
 
 class Publisher(DocumentTemplate):
@@ -122,37 +121,39 @@ class Publisher(DocumentTemplate):
     """
     _schema = schema
     _key = LexicalKey(['name'])
-    title: str
+    label: str
     name: str
 
     @classmethod
-    def create_publisher(cls, title):
-        name = str(title).replace(" ", "_").lower()
-        return cls(title=title, name=name)
+    def create_publisher(cls, label):
+        name = str(label).replace(" ", "_").lower()
+        return cls(label=label, name=name)
+
 
 
 class Review(DocumentTemplate):
     """
     _key = HashKey(['title', 'author'])
     title: str
-    author: Set['User']
+    author: str 
     text: str
-    pub-day: int
-    pub-month: int
-    pub-year: int
-    pub-date: Set['pub-day', 'pub-month', 'pub-year']
+    game: Set['Game']
+    pub-date: str 
 
     """
     _schema = schema
     _key = HashKey(['title', 'author'])
     title: str
-    game: Set['Game']
-    author: Set['User']
+    game: Set['Game'] 
+    author: Set['User'] 
     text: str
-    pub_date: int 
+    pub_date: str
+
+
+def main():
+    played_it_db.db_connect()
+    schema.commit(played_it_db.client, commit_msg="Updated Review, Publisher, User, Game")
 
 
 if __name__ == "__main__":
-    played_it_db.db_connect()
-    schema.commit(played_it_db.client, commit_msg='Test Commit: Is this working?')
-
+    main()
