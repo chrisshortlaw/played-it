@@ -1,17 +1,20 @@
+from datetime import datetime, timezone
+import re
 from typing import Set
 import os
 if os.path.exists("env.py"):
     import env
 
+
 from flask import Flask, flash, render_template, redirect, request, session, url_for
 import flask_wtf
 from terminusdb_client import WOQLClient, WOQLQuery 
-from forms import LoginForm, RegisterForm
+from forms import LoginForm, RegisterForm, AddGameForm, ReviewForm 
 # from flask-login import LoginManager
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import Config
-from models import User, Game
+from models import User, Game, Review
 from database import played_it_db
 
 app = Flask(__name__)
@@ -40,8 +43,7 @@ def login():
     """
     form = LoginForm()
     if form.validate_on_submit():
-        user_id = str(form.username.data).replace('@','%40')
-        user_list = list(played_it_db.client.query_document({"@type": "User", "@id": f"User/{user_id}"}))
+        user_list = list(played_it_db.client.query_document({"@type": "User", "email": f"{form.email.data}"}))
         if len(user_list) == 1:
             if check_password_hash(user_list[0]['_password'], form.password.data):
                 session['username'] = user_list[0]['name']
@@ -109,8 +111,11 @@ def profile(username):
             else:
                 posts = [{'author': user['name'], 'body': 'Test Post 1'}, {'author': user['name'], 'body': 'Test Post 2'}]
                 games = []
-                for played_game in user["played_games"]:
-                    games.append(played_it_db.client.get_document(played_game))
+                if "played_games" in user:
+                    for played_game in user["played_games"]:
+                        games.append(played_it_db.client.get_document(played_game))
+                else:
+                    pass
                 return render_template("user.html", user=user, posts=posts, games=games)
         else:
             flash('Oops. Something went wrong. Please log in to continue')
@@ -129,58 +134,101 @@ def logout():
     return redirect(url_for('main'))
 
 
-@app.route('/user/<username>/add_game')
+@app.route('/games')
+def games():
+    games = played_it_db.client.get_documents_by_type('Game')
+    return render_template('browse_games.html', games=games)
+
+
+@app.route('/games/<game_name>')
+def game_page(game_name):
+    games = list(played_it_db.client.query_document({"@type": "Game", "name": game_name}))
+    pub_id = games[0]['publisher'] 
+    print(pub_id)
+    publisher = played_it_db.client.get_document(pub_id)
+    print(publisher)
+    return render_template('game.html', game_name=game_name, games=games, publisher=publisher)
+
+
+@app.route('/user/<username>/add_game', methods=['GET', 'POST'])
 def add_game(username):
     if 'username' in session:
+        # As above, this checks if the session cookie has a username key
+        # if not, send the user to a login screen.
         form = AddGameForm()
+        # is this try...except block necessary?
         try:
-            current_user = user.played_it_db.client.query_document({"@type": "User", "username":username})
-        except Error as e:
+            current_user = played_it_db.client.query_document({"@type": "User", "name":username})
+        except Exception as e:
             print(e)
             flash('Oops. We encountered a problem. Please log in to continue')
             session.pop('username')
             session.pop('email')
             return redirect(url_for('login'))
         else:
+            
             if form.validate_on_submit():
-                title = form.title.data
+                label = form.title.data
                 platform = form.platform.data
-                year = form.year.data
+                year = int(form.year.data)
                 genre = form.genre.data
                 publisher = form.publisher.data
-
-                if played_it_db.check_document_exists({"@type": "Game", "title": title}):
-                    game = played_it_db.get_first_document({"@type": "Game", "title": title})
-                    played_games = current_user['played_games']
-                    played_games.add(game)
-                    update_user = User(name=current_user['name'], email=current_user['email'], _password=current_user['_password'], played_games=played_games, reviews=current_user.reviews)
-                    try:
-                        played_it_db.client.update_document(update_user)
-                    except Error as e:
-                        print(e)
-                        flash('Update Unsuccessful. Please try again')
-                        return redirect(url_for('add_game', username=session['username']))
-                    else:
-                        flash('Update Successful.')
-                        return redirect(url_for('profile', username=session['username']))
+                 
+                # Check if Publisher is in database
+                publisher_id_regex = re.compile('Publisher/.*')
+                if publisher_id_regex.fullmatch(publisher):
+                    # if @id (a Lexical Key) is passed via the form
+                    # retrieve the relevant document object
+                    publisher_doc = played_it_db.get_doc_obj({"@id":publisher})
                 else:
-                    new_game = Game.create_game(title=title, platform=platform, year=year, genre=genre, publisher=publisher)
-                    played_games = current_user['played_games']
-                    played_games.add(new_game)
-                    try:
-                        played_it_db.client.insert_document(list(new_game), f"New Game Added by {user['username']}")
-                    except Error as e:
-                        print(e)
-                        flash('Failed to add game. Please try again')
-                        return redirect(url_for('add_game', username=session['username']))
-                    else:
-                        update_user = User(name=current_user['name'], email=current_user['email'], _password=current_user['_password'], played_games=played_games, reviews=current_user['reviews'])
+                    publisher_doc = played_it_db.get_doc_obj({"@type": "Publisher", "name": publisher.lower().replace(" ", "_") })
+                    if publisher_doc is None:
+                        publisher_doc = set()
+         
+                new_game = Game.create_game(label=label, platform=platform, year=year, genre=genre, publisher=set([publisher_doc]))
+                
+                try:
+                    played_it_db.client.insert_document(new_game, commit_msg=f"New Game Added by {session['username']}")
+                except Exception as e:
+                    print(e)
+                    flash('Failed to add game. Please try again')
+                    return redirect(url_for('add_game', username=session['username']))
+                flash('Game Added Successfully')
+                return redirect(url_for('profile', username=session['username']))
             # else block for when form does not validate or for GET request
             else:
                 return render_template('add_game.html', username=username, form=form)
-
     else:
         flash('Please log in to continue')
+        return redirect(url_for('login'))
+
+
+@app.route('/games/<game_name>/add_review', methods=['GET', 'POST'])
+def add_review(game_name):
+
+    if session:
+        form = ReviewForm()
+        if form.validate_on_submit():
+            username = session['username']
+            user_id = played_it_db.client.query_document({"@type": "User", "name": username}) 
+            game_id= Set(played_it_db.client.query_document({"@type": "Game", "name": game_name}))
+            pub_date = datetime.now(timezone.utc)
+            
+            new_review = Review(title=form.title, author=username, text=form.text, game=game_id, pub_date=pub_date)
+            added_reviews = played_it_db.client.insert_document(new_review)
+            for review_id in added_reviews:
+                update_user = user_id["reviews"].add(review_id)
+                played_it_db.client.update_document(update_user)
+            
+            flash('Review Successfully Added')
+            return redirect(url_for('profile', username=username))
+        else:
+            flash('Error with form validation. Please try again.')
+
+        return render_template('add_review.html', game_name=game_name)
+
+    else:
+        flash('Please Log In to post a review')
         return redirect(url_for('login'))
 
 
