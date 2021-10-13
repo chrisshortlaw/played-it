@@ -2,15 +2,31 @@
 
 import csv
 from typing import Set
-from models import Game, Publisher
-from config import Config
+import itertools
+import re
+
 from terminusdb_client import WOQLClient, WOQLQuery
 
+
+from models import Game, Publisher
+from config import Config
+from database import played_it_db
+
+
+# Global Vars
 games_list = []
 publisher_set = set()
 
 
-def game_etl():
+def db_client():
+    played_it_db.db_connect()
+    client = played_it_db.client
+
+
+    return client
+
+
+def game_extract():
     """
     Takes a csv (retrieved from kaggle) and converts it to dict
     uses replace string method to exchange ' ' <spaces> for '_'
@@ -25,60 +41,57 @@ def game_etl():
             publisher_set.add(game_publisher)
 
     print(f'Game : {games_list[0]}')
-    print(f'publisher_set')
 
 
-def db_connect():
-    """
-    function to connect to database
-    """
-    user = "chris"
-    team = "team_of_me"
-    endpoint = f"https://cloud.terminusdb.com/{team}"
-    db = "played_it_db"
-    client = WOQLClient(endpoint)
-
-    client.connect(user=user, team=team, db=db, use_token=True)
-    return client
-
-
-def load_publishers():
+def load_publishers(client):
     """
     Loads list of publisher docs
     Create a publisher key which shall be used as a lexicalkey
     Makes it easier to obtain publisher key.
     """
-    client = db_connect()
     
-    publisher_list = []
+    #list comprehension: takes strings from set and instantiates as Publisher docType
+    # returns label and name - a string in snake case
+    publisher_list = [Publisher(label=publisher, name=get_lexical_key(publisher)) 
+            for publisher in publisher_set ]
 
-    for publisher in publisher_set:
-        publisher_lexical_key = get_publisher_lexical_key(publisher)
-        publisher_list.append(Publisher(name=publisher, key_name=publisher_lexical_key))
+    print(f"{publisher_list[1].name}, {publisher_list[1].label}")
 
-    client.insert_document(publisher_list, commit_msg='Populated publishers')
+    client.insert_document(publisher_list, commit_msg='Populated publishers docType')
+    
+
+def check_publishers(client):
 
 
-def get_publisher_lexical_key(publisher_name):
+    publisher_iter = client.get_documents_by_type("Publisher")
+    print(f"check_publishers -> Publisher Length: {len(list(publisher_iter))}")
+
+
+def get_publisher_id(name):
+
+    return f"Publisher/{get_lexical_key(name)}"
+
+
+def get_lexical_key(name):
     """
-    Method to retrieve lexical_key from publisher name
+    Method to retrieve lexical_key from publisher name.
+    lexical_key should be snake_case form: 'this_is_a_lexical_key'
     """
+    _lexical_key = str(name).replace(" ", "_").lower()
 
-    publisher_lexical_key = str(publisher_name).replace(" ", "_")
+    return _lexical_key
 
-    return publisher_lexical_key
 
-def delete_document_by_type(doc_type_string):
+def delete_document_by_type(doc_type_string, client):
     """
     Deletes documents of a certain type in database.
     To be used for cleaning.
     TODO: Review how replace_document works - params not clear at present
     """
-    client = db_connect()
 
     docs_by_type = client.get_documents_by_type(doc_type_string)
 
-    existing_docs = [doc for doc in docs_by_type]
+    existing_docs = [doc['@id'] for doc in docs_by_type]
 
     client.delete_document(existing_docs)
     
@@ -88,35 +101,52 @@ def delete_document_by_type(doc_type_string):
         print(f"Documents of type: '{doc_type_string}' present. Deletion failed.")
 
 
-def load_games():
+def load_games(client):
     """
     Calls game_etl and retrieves a list of dicts populated from csv,
     Creates documents from that list of dicts and loads them to db
     """
 
-    client = db_connect()
-    game_etl()
+    #games_list = [{'Rank': '1', 'Name': 'Wii Sports', 'Platform': 'Wii', 'Year': '2006', 'Genre': 'Sports', 'Publisher': 'Nintendo', 'NA_Sales': '41.49', 'EU_Sales': '29.02', 'JP_Sales': '3.77', 'Other_Sales': '8.46', 'Global_Sales': '82.74', '': ''}]
     game_doc_list = []
     for game in games_list: 
-        # Complete this
-        game_publisher = client.get_document(str(game['Publisher']).replace(' ', '_'))
-        
-        new_game = Game(
-                rank=int(game['Rank']), 
-                name=game['Name'], 
-                year=int(game['Year']), 
-                platform=game['Platform'], 
-                genre=game['Genre'],
-                publisher = game_publisher,
-                na_sales = float(game['NA_Sales']),
-                eu_sales = float(game['EU_Sales']),
-                jp_sales = float(game['JP_Sales']),
-                other_sales = float(game['Other_Sales']),
-                global_sales = float(game['Global_Sales'])
-                )
-        game_doc_list.append(new_game)
+            i = 0
+            if i == 20:
+                break
+            else:
+                # Complete this
+                game_publisher = Publisher.create_publisher(game["Publisher"])
+                # game_publisher = client.query_document({"@type": "Publisher", "@id": get_publisher_id(game['Publisher'])})
+                game_name_key = get_lexical_key(game['Name'])
 
+                #type checking
+                year_check = re.compile('\d{4}|[Nn][\/\\][Aa]')
+                if year_check.fullmatch(game['Year']): 
+                    new_game = Game(
+                            label = game['Name'],
+                            name=game_name_key, 
+                            year=int(game['Year']), 
+                            platform=game['Platform'], 
+                            genre=game['Genre'],
+                            publisher = set([game_publisher]),
+                            reviews = set()
+                            )
+                    game_doc_list.append(new_game)
+                else:
+                    print(f"{game['Name']} contained corrupted data and was excluded.")
+                    continue
 
+                client.insert_document(game_doc_list, commit_msg='Added games library')
+                i += 1
+    print(game_doc_list[1].items())
 # import classes and load to db
 
+
+def main():
+    client = db_client()
+    game_extract()
+    load_games(client)
+
+
 if __name__ == "__main__":
+    main()
