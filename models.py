@@ -1,14 +1,13 @@
 #!Python3.9
-from typing import Type, Set
+from typing import Type, Set, Optional, List
 import os
 
-from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey, RandomKey
+from terminusdb_client import WOQLSchema, DocumentTemplate, LexicalKey, HashKey, RandomKey, WOQLClient  
 from werkzeug.security import check_password_hash, generate_password_hash 
 
 from database import played_it_db
 if os.path.exists('env.py'):
     import env
-
 
 
 schema = WOQLSchema()
@@ -19,19 +18,21 @@ class User(DocumentTemplate):
     Class of user.
     TODO: Add ability to like reviews, follow other Users and be followed.
     Schema: 
-        _key = LexicalKey['email'] - this should be unique and work for lexical key
-        name: Username chosen by User
+        _key = LexicalKey['email', 'name'] - this should be unique and work for lexical key
+        name: Username chosen by User -> str
+        email: User's email -> str
         _password: set with self.password
-        played_games: A Set of Documents the User has played. Added by User either after registration (TODO) or via a page on app
-        reviews: List of reviews written by User. Reviews related to games
+        Note: Below were removed but may return.
+        game_list: Optional["GameList"] 
+        reviews: Optional["ReviewList"] 
     """
     _schema = schema
     _key = HashKey(['email', 'name'])
     name : str
     email : str
     _password: str
-    played_games: Set['Game']
-    reviews: Set['Review']
+    reviews: Optional["ReviewList"]
+    game_list: Optional["GameList"]
     
     @property
     def password(self):
@@ -55,7 +56,7 @@ class User(DocumentTemplate):
         return check_password_hash(self.password(), password_string)
 
     @classmethod
-    def create_pass(cls, password):
+    def create_pass(cls, password_string):
         """
         Uses werkzeug built in password hash to generate a hashed pass and return it
         """
@@ -68,12 +69,12 @@ class User(DocumentTemplate):
      #   pass
     
     @classmethod
-    def create_user(cls, password, name, email, played_games = set(), reviews = set()):
+    def create_user(cls, password, name, email):
        # if name == name:        # insert Regex here
         #    pass
         #else:             
-        hashed_pass = create_pass(password)
-        return cls(name=name, email=email, _password=hashed_pass, played_games=played_games, reviews=reviews)
+        hashed_pass = User.create_pass(password)
+        return cls(name=name, email=email, _password=hashed_pass) 
 
 
 class Game(DocumentTemplate):
@@ -98,7 +99,7 @@ class Game(DocumentTemplate):
     year: int
     genre: str
     publisher: Set['Publisher']
-    reviews: Set['Review']
+    reviews: Optional['ReviewList']
 
     @classmethod
     def create_name(cls, label):
@@ -106,9 +107,9 @@ class Game(DocumentTemplate):
         return name
 
     @classmethod
-    def create_game(cls, label, platform, year, genre, publisher, reviews=set()):
+    def create_game(cls, label, platform, year, genre, publisher):
         name = cls.create_name(label)
-        return cls(name=name, label=label, platform=platform, year=year, genre=genre, publisher=publisher, reviews=reviews)
+        return cls(name=name, label=label, platform=platform, year=year, genre=genre, publisher=publisher) 
 
 
 class Publisher(DocumentTemplate):
@@ -130,30 +131,64 @@ class Publisher(DocumentTemplate):
         return cls(label=label, name=name)
 
 
-
 class Review(DocumentTemplate):
     """
-    _key = HashKey(['title', 'author'])
+    _key = HashKey(['title', 'author_name'])
     title: str
-    author: str 
-    text: str
-    game: Set['Game']
-    pub-date: str 
+    game: Optional["Game"]      # GameDoc -> Ref for Game
+    game_label: str             # label for game
+    _game_id: str               # @id for game
+    author: Optional["User"]    # AuthorDoc -> Ref for User
+    author_name: str            # str -> name for user 
+    _author: str                # @id for user
+    text: str                   # Text of Review
+    pub_date: str               # Publication Date of Review in str
 
     """
     _schema = schema
-    _key = HashKey(['title', 'author'])
+    _key = HashKey(['title', 'author_name', 'pub_date'])
     title: str
-    game: Set['Game'] 
-    author: Set['User'] 
-    text: str
-    pub_date: str
+    game: Optional["Game"]      # GameDoc -> Ref for Game
+    game_label: str             # label for game
+    _game_id: str               # @id for game
+    author: Optional["User"]    # AuthorDoc -> Ref for User
+    author_name: str            # str -> name for user 
+    _author: str                # @id for user
+    text: str                   # Text of Review
+    pub_date: str               # Publication Date of Review in str
+
+
+
+class GameList(DocumentTemplate):
+    """
+    key: RandomKey
+    user -> str @id "User"
+    games: List["Game"]
+    """
+    _schema = schema
+    _key = RandomKey()
+    user: str 
+    games: Set[str]
+
+
+class ReviewList(DocumentTemplate):
+    """
+    key: RandomKey
+    game -> str @id "Game"
+    reviews -> List["Review"]
+    """
+    _schema = schema
+    _key = RandomKey()
+    game: str
+    reviews: Set[str]
 
 
 def main():
+#   Update Schema
     played_it_db.db_connect()
-    schema.commit(played_it_db.client, commit_msg="Updated Review, Publisher, User, Game")
+    schema.commit(played_it_db.client, commit_msg="Updated ReviewLIst & GameList Model")
 
 
 if __name__ == "__main__":
     main()
+    
