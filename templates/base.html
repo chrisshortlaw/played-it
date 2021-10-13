@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.3/dist/css/bulma-carousel.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	{% block styles %}
 	{% endblock %}
   {% if title %}
@@ -30,7 +31,7 @@
 
 		<div id="navbarBasicExample" class="navbar-menu">
 			<div class="navbar-start">
-				<a class="navbar-item">
+        <a href={{ url_for('main') }} class="navbar-item">
 				Home
 				</a>
         {% if session['username'] %}
@@ -46,11 +47,11 @@
 					  More
 					</a>
 					<div class="navbar-dropdown">
-					  <a class="navbar-item">
-					    About
+            <a href={{ url_for('games') }} class="navbar-item">
+					    Browse Games
 					  </a>
-					  <a class="navbar-item">
-					    Jobs
+            <a href={{ url_for('add_review', username=session['username']) }} class="navbar-item">
+					    Post A Review
 					  </a>
 					  <a class="navbar-item">
 					    Contact
