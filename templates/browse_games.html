@@ -7,20 +7,22 @@
       <div class="tile is-ancestor">
         <div class="tile is-parent">
           {% for game in games %}
-          <div class="tile is-child box">
-            {% for key, value in game.items() %}
-              {% if key == 'title' %}
-              <p class="title">
-              {{ key }} : {{ value }}
-              </p>
-            {% elif key == 'publisher' %}
-              <p class="subtitle">
-              {{ key }} : {{ value }} 
-              </p>
-            {% else %}
-          {% endif %}
-          {% endfor %}
-          </div>
+          <a href="{{ url_for('game_page', game_name=game['name']) }}" >
+            <div class="tile is-child box">
+              {% for key, value in game.items() %}
+                {% if key == 'label' %}
+                <p class="title">
+                {{ value }}
+                </p>
+              {% elif key == 'publisher' %}
+                <p class="subtitle">
+                {{ key.capitalize() }} : {{ value[0].split('/')[1].capitalize() }}
+                </p>
+              {% else %}
+            {% endif %}
+            {% endfor %}
+            </div>
+          </a>
         {% endfor%}
         </div>
       </div>
