@@ -33,6 +33,7 @@ class DBClient:
             return True
         else:
             return False
+        
 
     def get_first_document(self, dict: Type[dict[str, str]]):
         """
@@ -70,7 +71,7 @@ class DBClient:
             try:
                 raw_doc = list(self.client.query_document(dict))[0]
             except Exception:
-                print(Exception)
+                print(f"get_doc_obj: {Exception}" )
                 return None
         else:
             raise TypeError("<dict> must have an '@id' or '@type' key.")
