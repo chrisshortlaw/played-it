@@ -4,17 +4,22 @@
 <div class="section">
   <div class="tile is-ancestor">
     <div class="tile is-parent">
-      {% for post in posts %}
-      <div class="tile is-child box">
-        <p class="title is-4">{{ post['author'] }}</p>
-        <p class="content">{{ post['body'] }}</p>
-      </div>
+      {% for game in games %}
+
+      <a href={{ url_for('game_page', game_name=game['name']) }}>
+        <div class="tile is-child box">
+            <p class="title is-4">{{ game['label'] }}</p>
+            <p class="content">{{ game['publisher'][0].split('/')[1].capitalize() }}</p>
+        </div>
+      </a>
       {% endfor %}
     </div>
   </div>
 </div>
 
-<div class="section has-background-info">
+{# Tile implementation of games list 
+
+<section class="section has-background-info">
   <div class="tile is-ancestor">
     <div class="tile is-parent">
       {% for game in games %}
@@ -26,28 +31,33 @@
       {% endfor %}
     </div>
   </div>
-</section>
+</section> 
 
-<section class="section">
+#}
+
+<section class="section has-background-info">
+  <div class="subtitle is-3 is-underlined has-text-white-ter">My Reviews</div>
   <div class="container">
     <!-- Start Carousel -->
-    <div id="carousel-demo" class="carousel">
-      {% for game in games %}
+    <div id="carousel-demo" class="carousel" data-loop="true">
+      {% for user_review in user_reviews %}
       <div class="item-{{ loop.index }}">
         <!-- Slide Content -->
         <div class="tile is-ancestor">
           <div class="tile is-parent">
             <div class="tile is-child box">
-              <p class="title is-3">{{ game['@id'] }}
-              <p class="title is-4">{{ game['name'] }}</p>
-              <p class="content">{{ game['publisher'] }}</p>
+              <p class="title is-4">{{ user_review['author'] }}</p>
+              <p class="content">{{ user_review['text'] }}</p>
             </div>
           </div>
         </div>
       </div>
       {% endfor %}
-  <!-- End Carousel -->
+    <!-- End Carousel -->
   </div>
+  <br>
+  <br>
+  <a href="{{ url_for('add_game', username=session['username']) }}" class="button is-link">Add a Game</a>
 </section>
 
 
