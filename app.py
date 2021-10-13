@@ -5,22 +5,29 @@ import os
 if os.path.exists("env.py"):
     import env
 
-
 from flask import Flask, flash, render_template, redirect, request, session, url_for
 import flask_wtf
 from terminusdb_client import WOQLClient, WOQLQuery 
+from terminusdb_client.woqlschema import WOQLSchema
 from forms import LoginForm, RegisterForm, AddGameForm, ReviewForm 
-# from flask-login import LoginManager
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import Config
-from models import User, Game, Review
+#from models import User, Game, Review, ReviewList, GameList
 from database import played_it_db
 
 app = Flask(__name__)
 app.config.from_object(Config)
 played_it_db.db_connect()
-# login_manager = LoginManager()
+
+
+data_schema = WOQLSchema()
+data_schema.from_db(played_it_db.client)
+
+
+User = data_schema.object.get('User')
+Game = data_schema.object.get('Game')
+Review = data_schema.object.get("Review")
 
 
 @app.route("/")
@@ -48,6 +55,7 @@ def login():
             if check_password_hash(user_list[0]['_password'], form.password.data):
                 session['username'] = user_list[0]['name']
                 session['email'] = user_list[0]['email']
+                session['@id'] = user_list[0]['@id']
                 flash(f"{user_list[0]['name']} has successfully logged in!")
                 return redirect(url_for('main'))
             else:
@@ -77,10 +85,19 @@ def register():
 
             user_pass = generate_password_hash(str(form.password.data), method='pbkdf2:sha256', salt_length=16)
 
-            new_user = User(email=form.email.data, name=form.username.data, _password=user_pass, played_games=set(), reviews=set())
+
+            # Instantiate User with two dummy forwardrefs. 
+            fake_review_raw = played_it_db.client.get_document("Review/0afa3d1539a937854953a4644fbdd00412b44a6be852369f96f2cdcd84d6da43")
+            fake_game_raw = played_it_db.client.get_document("Game/fake_game_Wii")
+            # Import Objects must be passed a list or iterable.
+            fake_game = data_schema.import_objects([fake_game_raw])
+            fake_review = data_schema.import_objects([fake_review_raw])
+
+
+            new_user = User(email=form.email.data, name=form.username.data, _password=user_pass, games=set(fake_game), reviews = set(fake_review))
 
             try:
-                played_it_db.client.insert_document(new_user)
+                played_it_db.client.update_document(new_user)
             except Exception as e:
                 print(f'Error loading new User to database. Please try again. Error: {e}.')
                 return render_template("register.html", title="Registration", form=form)
@@ -103,20 +120,19 @@ def profile(username):
     if 'username' in session:  
         if session['username'] == username:       
             try:
+                # TODO: Model One to Many relationship with ForwardRef
                 user = list(played_it_db.client.query_document({"@type": "User", "name": username}))[0]
+                user_reviews = played_it_db.client.get_document(user.get("reviews"))
+                user_games = played_it_db.client.get_document(user.get("games", "wrong key games"))
+                print(user.get("reviews"))
+                print(user)
+
             except Exception as e: 
-                print(e)
-                flash('Email Incorrect')
+                print(f"profile func: {e}")
+                flash('Error. Please log in to proceed.')
                 return redirect(url_for('login'))
             else:
-                posts = [{'author': user['name'], 'body': 'Test Post 1'}, {'author': user['name'], 'body': 'Test Post 2'}]
-                games = []
-                if "played_games" in user:
-                    for played_game in user["played_games"]:
-                        games.append(played_it_db.client.get_document(played_game))
-                else:
-                    pass
-                return render_template("user.html", user=user, posts=posts, games=games)
+                return render_template("user.html", user=user, user_reviews=[user_reviews], games=[user_games])
         else:
             flash('Oops. Something went wrong. Please log in to continue')
             session.pop('username', default=None)
@@ -143,10 +159,9 @@ def games():
 @app.route('/games/<game_name>')
 def game_page(game_name):
     games = list(played_it_db.client.query_document({"@type": "Game", "name": game_name}))
-    pub_id = games[0]['publisher'] 
-    print(pub_id)
+    pub_id = games[0]['publisher'][0] 
+    print(f"game_page func: {pub_id}")
     publisher = played_it_db.client.get_document(pub_id)
-    print(publisher)
     return render_template('game.html', game_name=game_name, games=games, publisher=publisher)
 
 
@@ -158,7 +173,7 @@ def add_game(username):
         form = AddGameForm()
         # is this try...except block necessary?
         try:
-            current_user = played_it_db.client.query_document({"@type": "User", "name":username})
+            current_user = played_it_db.get_doc_obj({"@type": "User", "name":username})
         except Exception as e:
             print(e)
             flash('Oops. We encountered a problem. Please log in to continue')
@@ -179,21 +194,40 @@ def add_game(username):
                 if publisher_id_regex.fullmatch(publisher):
                     # if @id (a Lexical Key) is passed via the form
                     # retrieve the relevant document object
-                    publisher_doc = played_it_db.get_doc_obj({"@id":publisher})
+                    # get_doc_obj takes a dict as argument
+                    print(f"Add_game: if block fired")
+                    publisher_raw = played_it_db.client.get_document(publisher)
+                    publisher_doc = data_schema.import_objects([publisher_raw])
                 else:
-                    publisher_doc = played_it_db.get_doc_obj({"@type": "Publisher", "name": publisher.lower().replace(" ", "_") })
-                    if publisher_doc is None:
-                        publisher_doc = set()
-         
-                new_game = Game.create_game(label=label, platform=platform, year=year, genre=genre, publisher=set([publisher_doc]))
-                
+                    print(f"Add_game: else block fired")
+                    publisher_raw = played_it_db.client.query_document({"@type": "Publisher", "name": publisher.lower().replace(" ", "_") })
+                    publisher_doc = data_schema.import_objects(publisher_raw)
+                # a snake_case name for new_game for easy querying
+                new_game_name = label.replace(" ", "_").lower() 
+                new_game = Game(label=label, name=new_game_name, platform=platform, year=year, genre=genre, publisher=set(publisher_doc))
+
+
                 try:
-                    played_it_db.client.insert_document(new_game, commit_msg=f"New Game Added by {session['username']}")
+                    played_it_db.client.update_document([new_game], commit_msg=f"New Game Added by {session['username']}")
                 except Exception as e:
                     print(e)
                     flash('Failed to add game. Please try again')
                     return redirect(url_for('add_game', username=session['username']))
                 flash('Game Added Successfully')
+
+                # Add new game to Users list of games
+                new_user_game_raw = played_it_db.client.query_document({"@type": "Game", "label": label})
+                new_user_game = data_schema.import_objects([new_user_game_raw])
+                current_user_games = current_user['games']
+
+                print(f"AddGame - current_user_games: {current_user_games}")
+
+                current_user_games.append(new_user_game_raw["@id"])
+                current_user["games"] = current_user_games
+                current_user_doc = data_schema.import_objects(current_user)
+
+                played_it_db.client.update_document(current_user_doc)
+                
                 return redirect(url_for('profile', username=session['username']))
             # else block for when form does not validate or for GET request
             else:
@@ -203,29 +237,35 @@ def add_game(username):
         return redirect(url_for('login'))
 
 
-@app.route('/games/<game_name>/add_review', methods=['GET', 'POST'])
-def add_review(game_name):
+@app.route('/user/<username>/add_review', methods=['GET', 'POST'])
+def add_review(username):
 
     if session:
         form = ReviewForm()
         if form.validate_on_submit():
             username = session['username']
-            user_id = played_it_db.client.query_document({"@type": "User", "name": username}) 
-            game_id= Set(played_it_db.client.query_document({"@type": "Game", "name": game_name}))
-            pub_date = datetime.now(timezone.utc)
+            user = played_it_db.get_doc_obj({"@type": "User", "name": username})
+            print(user)
+            print(user.name)
+            pub_date = str(datetime.now(timezone.utc))
+            game = played_it_db.client.get_document(form.game.data)
+            #game = played_it_db.get_doc_obj({"@id": form.game.data})
             
-            new_review = Review(title=form.title, author=username, text=form.text, game=game_id, pub_date=pub_date)
-            added_reviews = played_it_db.client.insert_document(new_review)
-            for review_id in added_reviews:
-                update_user = user_id["reviews"].add(review_id)
-                played_it_db.client.update_document(update_user)
-            
-            flash('Review Successfully Added')
-            return redirect(url_for('profile', username=username))
+            new_review = Review(title=form.title.data, author=username, _author=session['@id'], text=form.review_text.data, game=game['label'], _game_id=form.game.data, pub_date=pub_date)
+
+            try:
+                played_it_db.client.insert_document([new_review])
+            except Exception:
+                print(Exception)
+                flash("Review not posted. Could not connect to database.")
+                redirect(url_for('profile', username=username))
+            else:            
+                flash('Review Successfully Added')
+                return redirect(url_for('profile', username=username))
         else:
             flash('Error with form validation. Please try again.')
 
-        return render_template('add_review.html', game_name=game_name)
+        return render_template('add_review.html', username=username, form=form)
 
     else:
         flash('Please Log In to post a review')
