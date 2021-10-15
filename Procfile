@@ -1,1 +1,1 @@
-web: python played_it.py
+web: python app/__init__.py: app
