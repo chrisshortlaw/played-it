@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="hero is-success is-fullheight">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4">
+          <h3 class="title has-text-black">Add a Game to Your Library</h3>
+          <hr class="login-hr">
+          <div class="box">
+            <form method="post" action="{{ url_for('add_game', username=session['username']) }}">
+              {{ form.hidden_tag() }}
+              {{ form.csrf_token }}
+              <p class="has-text-black">Game Title</p>
+              <div class="field">
+                <div class="control">
+                  {{ form.title(size=32) }}
+                  {% for error in form.title.errors%}
+                  <span class="has-text-danger">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              <p class="has-text-black">Game Platform</p>
+              <div class="field">
+                <div class="control">
+                  {{ form.platform(size=32) }}
+                  {% for error in form.platform.errors %}
+                  <span class="has-text-danger">{{ error }}</span>
+                  {% endfor %}
+
+                </div>
+              </div>
+              <p class="has-text-black">Release Year</p>
+              <div class="field">
+                <div class="control">
+                  {{ form.year(size=32) }}
+                  {% for error in form.year.errors %}
+                  <span class="has-text-danger">{{ error }}</span>
+                  {% endfor %}
+
+                </div>
+              </div>
+              <p class="has-text-black">Genre</p>
+              <div class="field">
+                <div class="control">
+                  {{ form.genre(size=32) }}
+                  {% for error in form.genre.errors %}
+                  <span class="has-text-danger">{{ error }}</span>
+                  {% endfor %}
+
+                </div>
+              </div>
+              <div class="field">
+                <div class="control">
+                  {{ form.publisher(size=48) }}
+                  {% for error in form.publisher.errors %}
+                  <span class="has-text-danger">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+                  {{ form.submit() }}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+ 

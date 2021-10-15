@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="tile is-ancestor">
+  <div class="tile is-parent">
+    {% for document in documents %}	
+    <div class="tile is-child box">
+      <p class="title is-4">{{ document['name'] }}</p>
+      <p class="content">{{ document['label'] }}</p>
+
+    </div>
+    {% endfor %}
+    <div class="tile is-child box">
+      <p class="content">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Phasellus nec iaculis mauris. 
+      </p>
+    </div>
+  </div>
+</div>
+	     
+{% endblock content %}

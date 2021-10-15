@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <div class="section has-background-dark">
+    <div class="container">
+      <div class="section">
+        <div class="columns">
+          <div class="column has-text-centered">
+            <h1 class="title" style="color: ghostwhite;">Browse Game Collection</h1><br>
+          </div>
+        </div>
+        <div id="app" class="row columns is-multiline">
+          {% for game in games %}
+          <div class="column is-4">
+            <div class="card large">
+              <div class="card-image">
+                <figure class="image is-16by9">
+                  <img src="../static/assets/placeholder_berserk.jpg" alt="Image">
+                </figure>
+              </div>
+              <div class="card-content">
+                <div class="media">
+                  <div class="media-left">
+                    <figure class="image is-48x48">
+                      <img src="card.avatar" alt="Image">
+                    </figure>
+                  </div>
+                  <div class="media-content">
+                    <p class="title is-4 no-padding">{{game['label']}}</p>
+                    <p>
+                      <span class="title is-6">
+                        <a href=>{{game['name']}}</a> </span> </p>
+                    <p class="subtitle is-6">{{game['pub_doc']['label']}}</p>
+                    <p class="subtitle is-6">{{ game['genre'] }}
+                  </div>
+                </div>
+                <div class="content">
+                  {% if game['reviews'] %}
+                    {% for review in reviews %}
+                      <p>{{ review }}</p>
+                    {% endfor %}
+                  {% else %}
+                    <p>Lorem Ipsum Dipsum Dolorem Blah</p>
+                  {% endif %}
+                  <div class="background-icon"><span class="icon-twitter"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+    
+{% endblock %}
