@@ -24,7 +24,6 @@ class TestUser(unittest.TestCase):
     def tearDownClass(cls):
         mongo.db.tests.delete_many({})
 
-
     def test_password(self):
         new_user = User.create_user(password="pass", name="test_user", email="test@user.com")
         self.assertTrue(new_user.check_pass('pass'))
@@ -49,14 +48,31 @@ class TestUser(unittest.TestCase):
         self.assertFalse(upload_id != retrieve_user["_id"])
 
     def test_check_user(self):
-        pass
+        new_user = User.add_user(password="pass", name="new_user2", email="fake2@fakemail.com", db_loc=mongo.db.tests)
+        check_user = mongo.db.tests.find({"name": "new_user2"})
+        self.assertTrue(len(list(check_user)) == 1)
+        if check_user:
+            pass
+        else:
+            another_user = User.add_user(password="pass", name="new_user2", email="fake@fakemail.com", db_loc=mongo.db.tests)
+        check_duplicate = list(mongo.db.tests.find({"name": "new_user2"}))
+        self.assertFalse(len(check_duplicate) > 1)
+
 
     def test_check_user_email(self):
-        pass
+        new_user = User.add_user(password="pass", name="new_user2", email="fake2@fakemail.com", db_loc=mongo.db.tests)
+        check_user = mongo.db.tests.find({"email":"fake2@fakemail.com"})
+        self.assertTrue(len(list(check_user)) == 1)
+        if check_user:
+            pass
+        else:
+            another_user = User.add_user(password="pass", name="new_user2", email="fake2@fakemail.com", db_loc=mongo.db.tests)
+        check_duplicate = list(mongo.db.tests.find({ "email": "fake2@fakemail.com" }))
+
 
     def test_add_game(self):
         pub_doc = mongo.db.publisher.find_one({"name": "nintendo"})
-        new_https://robohash.org/YOUR-TEXT.pnggame = Game.create_game(label='fake game 3', platform="SNES", year=1996, genre="action", publisher=pub_doc.get('_id'))
+        new_game = Game.create_game(label='fake game 3', platform="SNES", year=1996, genre="action", publisher=pub_doc.get('_id'))
         self.assertEqual(mongo.db.tests.find_one({"name": new_game.name}), None)
         added_game = mongo.db.tests.insert_one(asdict(new_game))
         retrieved_game = mongo.db.tests.find_one({"_id": added_game.inserted_id})
@@ -64,8 +80,6 @@ class TestUser(unittest.TestCase):
 
     def test_game_retrieval(self):
         pass
-
-
 
     def test_add_review(self):
         pub_doc = mongo.db.publisher.find_one({"label": "Nintendo"}) 
