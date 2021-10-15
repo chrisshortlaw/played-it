@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 if os.path.exists('env.py'):
     import env
 
+from app.database_mongo import mongo
 
 def make_lexical_key(prefix: str, str_list: List[str]) -> str:
     """
@@ -36,6 +37,14 @@ class BaseModel:
         mongo_obj.pop('_id')
         return mongo_obj
 
+    @classmethod
+    def from_mongo(cls, **mongodict):
+        new_model = cls(**mongodict)
+        if new_model._id is None:
+            raise ValueError('_id not present', f'{mongodict}')  
+        else:
+            return new_model._id
+
 
 @dataclass
 class User(BaseModel):
@@ -51,8 +60,8 @@ class User(BaseModel):
     """
     email : str
     _password: str
-    reviews: List[str] 
     game_list: List[str] 
+    avatar_url: str
     _id: Optional[str] = None
 
     @property
@@ -83,20 +92,24 @@ class User(BaseModel):
         """
         hashed_pass = generate_password_hash(password_string, method='pbkdf2:sha256', salt_length=16)
         return hashed_pass
-        
+
      
     @classmethod
-    def create_user(cls, password, name, email, reviews=[], game_list=[]):
+    def create_user(cls, password, name, email, game_list=[]):
         hashed_pass = User.create_pass(password)
-        return cls(name=name, email=email, _password=hashed_pass, reviews=reviews, game_list=game_list) 
+        avatar_name = urllib.parse.quote_plus(name)
+        avatar_url = f'https://robohash.org/{avatar_name}.png'
+        return cls(name=name, email=email, _password=hashed_pass, game_list=game_list, avatar_url=avatar_url) 
 
     @classmethod
-    def add_user(cls, password, name, email, db_loc):
-        new_user = User.create_user(password, name, email)
-        uploaded_user = db_loc(to_mongo_dict(new_user))
+    def add_user(cls, password, name, email, db_loc, **kwargs):
+        new_user = User.create_user(password, name, email, **kwargs)
+        uploaded_user = db_loc.insert_one(new_user.to_mongo_dict())
         return uploaded_user.inserted_id
 
-
+    def upload_user(self, db_loc):
+        uploaded_user = db_loc.insert_one(self.to_mongo_dict())
+        return uploaded_user.inserted_id
 
 @dataclass
 class Game(BaseModel):
@@ -118,7 +131,7 @@ class Game(BaseModel):
     year: int
     genre: str
     publisher: str 
-    reviews: List[str] 
+    _id : Optional[str] = None
 
     @classmethod
     def create_name(cls, label):
@@ -126,9 +139,19 @@ class Game(BaseModel):
         return name
 
     @classmethod
-    def create_game(cls, label, platform, year, genre, publisher, reviews=[]):
+    def create_game(cls, label, platform, year, genre, publisher):
         name = cls.create_name(label)
-        return cls(name=name, label=label, platform=platform, year=year, genre=genre, publisher=publisher, reviews=reviews) 
+        return cls(name=name, label=label, platform=platform, year=year, genre=genre, publisher=publisher)
+
+    @classmethod
+    def add_game(cls, label, platform, year, genre, publisher, db_loc):
+        """
+        publisher will be publisher["_id"]
+        Preparation must be done to ensure this functions correctly.
+        """
+        new_game = Game.create_game(label=label, platform=platform, year=year, genre=genre, publisher=publisher)
+        uploaded_game = db_loc.insert_one(to_mongo_dict(new_game))
+        return uploaded_game.inserted_id
 
 
 @dataclass
@@ -141,6 +164,7 @@ class Publisher(BaseModel):
     label: Regular spelling.
     """
     name: str
+    label: str
 
     @classmethod
     def create_publisher(cls, label):
@@ -149,23 +173,31 @@ class Publisher(BaseModel):
 
 
 @dataclass
-class Review:
+class Review(BaseModel):
     """
-    title: str
-    game: id for game          
-    game_label: str                 
-    author: id for author (User)       
-    author_name: str            # str -> name for user 
+    game: str               # Label for game
+    game_id: str            # Id for game                 
+    author: str             # name for author (User)       
+    author_id: str          # id for user 
     text: str                   # Text of Review
     pub_date: str               # Publication Date of Review in str
-
+    _id: Optional[str] = None
+    
+    Model for reviews which will be made and uploaded by users. 
     """
     game: str                   # GameDoc -> Ref for Game
-    game_label: str             # label for game
-    author: str                 # AuthorDoc -> Ref for User
-    author_name: str            # str -> name for user 
+    game_id: str                # Id for game
+    author: str                 # Author Name
+    author_id: str            # str -> name for user 
     text: str                   # Text of Review
     pub_date: str               # Publication Date of Review in str
+    _id: Optional[str] = None
+
+    @classmethod
+    def add_review(cls, name, game, game_id, author, author_id, text, pub_date, db_loc):
+        new_review = Review(name=name, game=game, game_id=game_id, author=author, text=text, pub_date=pub_date)
+        added_review = db_loc.insert_one(to_mongo_dict(new_review))
+        return added_review.inserted_id
 
 
 @dataclass
@@ -181,8 +213,11 @@ class GameList:
     """
     user -> str @id "User"
     games: List["Game"]
+    This class functions as a bucket for managing the user to games relatioship i.e. a one-to-many table if we were using a relational db.
     """
     user: str 
+    page: int
+    count: int
     games: Set[str]
 
 
@@ -191,8 +226,11 @@ class ReviewList:
     """
     game -> str @id "Game"
     reviews -> List["Review"]
+    A bucket for reviews. A one-to-many relationship between games and reviews.
     """
     game: str
+    page: int
+    count: int
     reviews: Set[str]
 
 
