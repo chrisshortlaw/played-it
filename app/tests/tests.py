@@ -3,6 +3,7 @@ from app import app
 from app.models import User, Game, Review, Publisher
 from dataclasses import asdict
 from app.database_mongo import mongo
+from bson import ObjectId
 
 class TestUser(unittest.TestCase):
 
@@ -29,16 +30,33 @@ class TestUser(unittest.TestCase):
         self.assertTrue(new_user.check_pass('pass'))
         self.assertFalse(new_user.check_pass('dog'))
 
-    def test_add_user(self):
+    def test_make_user(self):
         new_user = User.create_user(password="pass", name="test_user", email="test@user.com")
         added_user = mongo.db.tests.insert_one(asdict(new_user))
         retrieve_user = mongo.db.tests.find_one({"name": "test_user"})
         self.assertEqual(added_user.inserted_id, retrieve_user["_id"])
 
+    def test_add_user(self):
+        new_user = User.add_user(password="password", name="new_user1", email="fake@fakemail.com", db_loc=mongo.db.tests)
+        check_user = mongo.db.tests.find_one({"_id": ObjectId(new_user)} )
+        self.assertEqual(check_user["_id"], new_user)
+
+    def test_load_existing_user(self):
+        new_user = User.create_user(password="pass", name="new_user2", email="fake2@fakemail.com")
+        upload_id = new_user.upload_user(mongo.db.tests)
+        retrieve_user = mongo.db.tests.find_one({"name": "new_user2"})
+        self.assertEqual(upload_id, retrieve_user["_id"])
+        self.assertFalse(upload_id != retrieve_user["_id"])
+
+    def test_check_user(self):
+        pass
+
+    def test_check_user_email(self):
+        pass
 
     def test_add_game(self):
         pub_doc = mongo.db.publisher.find_one({"name": "nintendo"})
-        new_game = Game.create_game(label='fake game 3', platform="SNES", year=1996, genre="action", publisher=pub_doc.get('_id'))
+        new_https://robohash.org/YOUR-TEXT.pnggame = Game.create_game(label='fake game 3', platform="SNES", year=1996, genre="action", publisher=pub_doc.get('_id'))
         self.assertEqual(mongo.db.tests.find_one({"name": new_game.name}), None)
         added_game = mongo.db.tests.insert_one(asdict(new_game))
         retrieved_game = mongo.db.tests.find_one({"_id": added_game.inserted_id})
@@ -63,17 +81,17 @@ class TestUser(unittest.TestCase):
         review_author = mongo.db.tests.find_one({"name": "test_user"})
         if review_author is None:
             new_user = User.create_user(password="pass", name="test_user", email="test@user.com")
-            added_user = mongo.db.tests.insert_one(asdict(new_user))
+            added_user = mongo.db.tests.insert_one(new_user.to_mongo_dict())
             review_author = mongo.db.tests.find_one({ "name": "test_user" })
 
         self.assertFalse(review_author == None, 'User is not present in db')
 
-        test_review = Review(title="Test Review", game=reviewed_game.get("_id"), game_label=reviewed_game.get("label"), author=review_author.get("_id"), author_name=review_author.get('name'), text="This is a test", pub_date="12-12-21")
-        added_review = mongo.db.tests.insert_one(asdict(test_review))
-        retrieved_review = mongo.db.tests.find_one({"title": test_review.title})
+        test_review = Review(name="Test Review", game=reviewed_game['label'], game_id=reviewed_game['_id'], author=review_author["name"], author_id=review_author["_id"], text="This is a test review", pub_date="15-12-1984")
+        added_review = mongo.db.tests.insert_one(test_review.to_mongo_dict())
+        retrieved_review = mongo.db.tests.find_one({"name": test_review.name})
         self.assertEqual(added_review.inserted_id, retrieved_review["_id"])
-        self.assertEqual(retrieved_review.get("game"), reviewed_game.get("_id"))
-        self.assertEqual(retrieved_review.get("author"), review_author.get("_id"))
+        self.assertEqual(retrieved_review.get("game_id"), reviewed_game.get("_id"))
+        self.assertEqual(retrieved_review.get("author_id"), review_author.get("_id"))
         
 
 if __name__ == "__main__":
