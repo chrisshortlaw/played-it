@@ -1,22 +1,17 @@
 #!python3
 
 import os
-from terminusdb_client import WOQLClient
 if os.path.exists('env.py'):
     import env
 
 class Config(object):
 
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'Latticed!Multitask!Sullen!Marital!Matchbox!Dedicate!Saucy!Overlying'
+    IP = os.environ.get("IP") or "0.0.0.0"
 
-    
-    TEAM = "team_of_me"
+    PORT = os.environ.get("PORT") or "5000"
 
-    DATABASE_NAME = "played_it_db"
+    SECRET_KEY = os.environ.get("SECRET_KEY") #or 'Latticed!Multitask!Sullen!Marital!Matchbox!Dedicate!Saucy!Overlying'
 
-    DB_URI = f"https://cloud.terminusdb.com/team_of_me/"
+    MONGO_DBNAME = os.environ.get("MONGO_DBNAME") #or "played_it_db"
 
-# SAMPLE DB CONNECT CODE:
-# client=WOQLClient(Config.DB_URI)
-# client.connect(team=Config.TEAM, jwt_token=Config.TERMINUSDB_ACCESS_TOKEN, db=Config.DATABASE_NAME,)
-# Try setting token in environment variables
+    MONGO_URI = os.environ.get("MONGO_URI") #or "mongodb+srv://chrisshort:MLf3lOpKc8Z5qRUn@cluster0.h0lsb.mongodb.net/played_it_db?retryWrites=true&w=majority"
