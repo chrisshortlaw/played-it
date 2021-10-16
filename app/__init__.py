@@ -1,5 +1,5 @@
 import os
-from config import Config
+from new_config import Config
 if os.path.exists("env.py"):
     import env
 
@@ -13,3 +13,6 @@ app.config.from_object(Config)
 from app.database_mongo import mongo
 
 from app import routes, errors
+
+if __name__ == "__main__":
+    app.run(host=os.environ.get("IP"), port=os.environ.get("PORT"))
