@@ -2,75 +2,32 @@
 
 {% block content %}
 <div class="section">
-  <div class="tile is-ancestor">
-    <div class="tile is-parent">
-      {% for game in games %}
-
-      <a href={{ url_for('game_page', game_name=game['name']) }}>
-        <div class="tile is-child box">
-            <p class="title is-4">{{ game['label'] }}</p>
-            <p class="content">{{ game['publisher'][0].split('/')[1].capitalize() }}</p>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
+  <div class="tabs is-centered">
+    <ul>
+      <li class="is-active tab-item"><a class="tab-link" href={{ url_for('profile', username=session['username']) }} >My Profile</a></li>
+      <li class="tab-item"><a class="tab-link" href= {{ url_for('user_games', username=session['username']) }} >My Games</a></li>
+      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=session['username']) }}>My Reviews</a></li>
+    </ul>
   </div>
 </div>
 
-{# Tile implementation of games list 
-
-<section class="section has-background-info">
-  <div class="tile is-ancestor">
-    <div class="tile is-parent">
-      {% for game in games %}
-      <div class="tile is-child box">
-        <p class="title is-3">{{ game['@id'] }}
-        <p class="title is-4">{{ game['name'] }}</p>
-        <p class="content">{{ game['publisher'] }}</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section> 
-
-#}
-
-<section class="section has-background-info">
-  <div class="subtitle is-3 is-underlined has-text-white-ter">My Reviews</div>
-  <div class="container">
-    <!-- Start Carousel -->
-    <div id="carousel-demo" class="carousel" data-loop="true">
-      {% for user_review in user_reviews %}
-      <div class="item-{{ loop.index }}">
-        <!-- Slide Content -->
-        <div class="tile is-ancestor">
-          <div class="tile is-parent">
-            <div class="tile is-child box">
-              <p class="title is-4">{{ user_review['author'] }}</p>
-              <p class="content">{{ user_review['text'] }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    <!-- End Carousel -->
-  </div>
-  <br>
-  <br>
-  <a href="{{ url_for('add_game', username=session['username']) }}" class="button is-link">Add a Game</a>
-</section>
-
+  {% block section %}
+  {% endblock section %}
 
 {% endblock %}
+{% block script %}
+    <script>
+      for (let z = 0, z < tabLinks; z++){ 
+          tabItems[i].addEventListener("click", function() {
+            Array.from(tabLinks, tab-link => tab-link.parentNode.classList.remove("is-active"));
+            tabLinks[i].parentNode.classList.add("is-active");
+          });
+        }
+    </script>
 
-{% block scripts %}
-  <script src="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.3/dist/js/bulma-carousel.min.js"></script>
-  <script>
-		bulmaCarousel.attach('#carousel-demo', {
-			slidesToScroll: 1,
-			slidesToShow: 4
-		});
-  </script>
+{% block user_script %}
 
-{% endblock %}
-
+{% endblock user_script %}
+{% endblock script %}
+  
+  

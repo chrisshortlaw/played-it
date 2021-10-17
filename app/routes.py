@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from bson.objectid import ObjectId
 from bson.son import SON
 from dacite import from_dict
+from flask_pymongo import PyMongo
 
 from app.database_mongo import mongo
 from app.models import User, Game, Review, ReviewList, GameList
@@ -36,12 +37,14 @@ def login():
     if form.validate_on_submit():
 
         user_doc = mongo.db.users.find_one({"email": f"{ form.email.data }"})
+        # remove print statement later
+        print(user_doc)
         if user_doc.get("email") is not None:
             if check_password_hash(user_doc['_password'], form.password.data):
                 session['username'] = user_doc['name']
                 session['email'] = user_doc['email']
-                session['_id'] = user_doc['_id']
-                flash(f"{user_doc['name']} has successfully logged in!")
+                session['_id'] = str(user_doc['_id'])
+                flash(f"{session['username']} has successfully logged in!")
                 return redirect(url_for('main'))
         else:
             flash('Username Incorrect')
@@ -93,16 +96,19 @@ def profile(username):
     """
     If statement prevents access to profile unless logged in. Consider using session cookie to hold boolean value - .is_logged_in
     """
-    if session.get(username) is not None:      
+    if session.get('username') is not None:      
         try:
             user = mongo.db.users.find_one({"name": username})                
+            print(f"User successfully retrieved: {user}")
             if user.get("reviews") is not None:
-                user_reviews = mongo.db.reviews.find([{"_id": ObjectId(review)} for review in user.get("reviews")])               
+                print("Getting User reviews")
+                user_reviews = [mongo.db.reviews.find_one({"_id": ObjectId(review)}) for review in user.get("reviews")]               
             else:
                 # TODO: Insert a placeholder id/reference here.
                 user_reviews = []
             if user.get("games") is not None:
-                user_games = mongo.db.games.find([{"_id": ObjectId(game)} for game in user.get("game_list")])
+                print("Getting User games...")
+                user_games = [mongo.db.games.find_one({"_id": ObjectId(game)}) for game in user.get("game_list")]
             else:
                 user_games = []
 
@@ -111,7 +117,7 @@ def profile(username):
             flash('Error. Please log in to continue')
             return redirect(url_for('login'))
         else:
-            return render_template("user.html", user=user, user_reviews=user_reviews, games=user_games)
+            return render_template("user_profile.html", user=user)
     else:
         flash('Please log in to access user profile')
         return redirect(url_for('login'))
@@ -238,3 +244,23 @@ def add_review(username):
         flash('Please Log In to post a review')
         return redirect(url_for('login'))
 
+@app.route('/user/<username>/games', methods=['GET'])
+def user_games(username):
+    if session.get('username') is None:
+        flash('Please log in to view content')
+        return redirect(url_for('login'))
+    elif session.get('username') == username:
+        # TODO: Restructure Data Model top permit holding game data in User collection for optimised querying.
+        user = mongo.db.users.find_one({"_id": ObjectId(session['_id'])})
+        games = [mongo.db.games.find_one({"_id": ObjectId(game)}) for game in user.get('game_list')]
+        return render_template('user_games.html', games=games)
+    else:
+        # TODO: Refactor this for a public profile
+        return redirect(url_for('login'))
+
+
+@app.route('/user/<username>/reviews', methods=['GET'])
+def user_reviews(username):
+    user = mongo.db.users.find_one({"_id": ObjectId(session['_id'])})
+    reviews = [mongo.db.reviews.find({'_id': ObjectId(review)}) for review in user.get('reviews')]
+    return render_template('user_reviews.html', user_reviews=reviews)

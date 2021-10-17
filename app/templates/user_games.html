@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section">
+  <div class="tabs is-centered">
+    <ul>
+      <li class="tab-item"><a class="tab-link" href={{ url_for('profile', username=session['username']) }} >My Profile</a></li>
+      <li class="is-active tab-item"><a class="tab-link" href= {{ url_for('user_games', username=session['username']) }} >My Games</a></li>
+      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=session['username']) }}>My Reviews</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section">
+    <div class="columns">
+      <div class="column has-text-centered">
+        <h1 class="title" style="color: black;">My Games</h1><br>
+      </div>
+    </div>
+    <div id="app" class="row columns is-multiline">
+      {% for game in games %}
+        <div class="card large">
+          <div class="card-image">
+            <figure class="image is-16by9">
+              <img src="{{ url_for('static', filename= '../static/assets/placeholder_berserk.jpg') }}" alt="PlaceHolder Image: Black Knight with sword by the Moon">
+            </figure>
+          </div>
+          <div class="card-content">
+            <div class="media">
+              <div class="media-content">
+                <p class="title is-4 no-padding"><a href={{ url_for('game_page', game_name=game['name']) }}>{{game['label']}}</a></p>
+                <p>
+                  {{ game['genre'] }}
+                  </p>
+                <p class="subtitle is-6">{{game['publisher']}}</p>
+              </div>
+            </div>
+            <div class="content" aria-label="Sample Review Text">
+              {# Display some review text on the card. Consider adding stylised quotes above to indicate it is a review #}
+              {% if game['review_texts'] %}
+                {% for review in game['review_texts'] if loop.index0 == 0 %}
+                {# Limit the text to a single review and limit the review to 280 characters #}
+                  {% for text in review if loop.index0 < 279 %}
+                    {{ text }}
+                  {% endfor %}
+                {% endfor %}
+              {% else %}
+                <p>A sample review goes here.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
