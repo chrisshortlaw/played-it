@@ -5,7 +5,10 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.3/dist/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="../static/css/style.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://use.fontawesome.com/641d9d9e38.js"></script>
+
 	{% block styles %}
 	{% endblock %}
   {% if title %}
@@ -18,8 +21,8 @@
 	<header>
 		<nav class="navbar" role="navigation" aria-label="main navigation">
 		  <div class="navbar-brand">
-			  <a class="navbar-item" href="{{url_for('main')}}">
-			    <img src="{{ url_for('static', filename='assets/arcade.png')}}" width="56" height="28">
+			  <a class="navbar-item" href="{{url_for('main')}}" aria-label="Icon. Click for Main Page.">
+			    <img src="{{ url_for('static', filename='assets/arcade.png')}}" alt="Joystick Icon by Freepik from flaticon.com" width="56" height="28">
 		    </a>
 
 		    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -31,7 +34,7 @@
 
 		<div id="navbarBasicExample" class="navbar-menu">
 			<div class="navbar-start">
-        <a href={{ url_for('main') }} class="navbar-item">
+        <a href="{{ url_for('main') }}" class="navbar-item">
 				Home
 				</a>
         {% if session['username'] %}
@@ -117,12 +120,14 @@
   </main>
 	<script src="{{url_for('static', filename='js/script.js')}}"></script>
 
-	{% block scripts %}
-	{% endblock scripts %}
+	{% block script %}
+	{% endblock script %}
 
 	<footer>
 		<div class="footer">
 			<div class="content has-text-centered">Joystick Icon made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+      <div class="content has-text-centered">Main Page Hero IMage Photo by <a href="https://unsplash.com/@ingvar_erik?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Igor Karimov</a> on <a href="https://unsplash.com/s/photos/video-game?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></div>
+
 		</div>
 	</footer>
 </body>
