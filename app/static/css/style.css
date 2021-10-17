@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&family=Roboto+Condensed&display=swap');
+
+
+/* GENERAL & FONTS */
+
+h1,
+h2,
+h3,
+h4,
+.title {
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+
+p,
+a {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* CLASSES & COLOURS */
+
+.gamer-green {
+  color: rgb(15, 255, 149);
+
+}
+
+.gamer-green-bg {
+  background-color: rgb(15, 255, 149);
+}
+
+.grey-bg {
+  background-color: rgb(239, 240, 239);
+}
+
+/* MAIN.HTML */
+
+i {
+  font-size: xx-large;
+  color: rgb(167, 164, 224); /* SNES PAD (US & JAP) Colours */
+  padding: 2rem 0 2rem 0;
+}
+
+
+
+.played-hero {
+  background: url("../assets/igor-karimov-9AmKnNZw3GA-unsplash.jpg") center/cover no-repeat fixed;
+}
+.is-shady:hover {
+  box-shadow: 5px 5px 5px rgba(84, 88, 90, .5);
+}
+
+.shady-tile:hover {
+  box-shadow: 2px 5px 5px rgba(84, 88, 90, .5);
+}
+
+hr {
+  height: 3px; 
+  background-color: rgb(167, 164, 224);
+  color: rgb(167, 164, 224);
+}
