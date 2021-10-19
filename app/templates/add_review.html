@@ -8,7 +8,7 @@
           <h3 class="title has-text-black is-uppercase">Review this Game</h3>
           <hr class="login-hr">
           <div class="box">
-            <form method="post" action={{ url_for('add_review', username=session['username']) }}>
+            <form method="post" action={{ url_for('add_review', game_name=game.name) }}>
               {{ form.hidden_tag() }}
               {{ form.csrf_token }}
               <p class="has-text-black">Review Title</p>
@@ -20,16 +20,11 @@
                   {% endfor %}
                 </div>
               </div>
-              <p class="has-text-black">Game Title</p>
-              <div class="field">
-                <div class="control">
-                  {{ form.game(size=64) }}
-                  {% for error in form.game.errors%}
-                  <span class="has-text-danger">{{ error }}</span>
-                  {% endfor %}
-                </div>
+              <div>
+                <span class="has-text-black has-text-weight-semibold">Game Title: </span>
+                <span class="has-text-black">{{ game.label }}</span>
               </div>
-
+              <br />
               <p class="has-text-black">Review:</p>
               <div class="field">
                 <div class="control">
