@@ -121,7 +121,10 @@ def games():
 @app.route('/games/<game_name>')
 def game_page(game_name):
     game = Game.from_mongo(**mongo.db.games.find_one({"name": game_name}))
-    user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+    if session.get('username') is not None:
+        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+    else:
+        user = None 
     # TODO: Rewrite this to account for publisher info in game document
     return render_template('game.html', game_name=game_name, game=game, user=user)
 
