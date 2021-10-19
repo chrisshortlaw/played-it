@@ -113,8 +113,6 @@ class AddGameForm(FlaskForm):
     submit = SubmitField('Add Game', 
             render_kw={"class": "button is-block is-info is-large is-fullwidth"})
 
-game_docs = mongo.db.games.find({})
-game_choices = [(game["_id"], game['label']) for game in game_docs]
 
 class ReviewForm(FlaskForm):
     """
@@ -136,11 +134,6 @@ class ReviewForm(FlaskForm):
                 "rows":"4", 
                 "cols":"70"}
             )
-    game = SelectField('Game', 
-            validators=[DataRequired(), InputRequired()], 
-            description='Select Game to be reviewed', 
-            render_kw={"class": "input"}, 
-            choices = game_choices)
     submit = SubmitField('Add Review', 
             render_kw={"class": "button is-block is-info is-large is-fullwidth"})
 
