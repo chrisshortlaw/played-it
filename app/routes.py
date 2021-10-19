@@ -91,6 +91,7 @@ def profile(username):
 
 @app.route('/user/<username>/edit_profile', methods=['GET', 'POST'])
 def edit_profile(username):
+    # TODO: Finish this.
     form = EditProfileForm()
     user = User.from_mongo(**mongo.db.users.find_one({"email": session.get('email')}))
     if form.validate_on_submit():
@@ -179,11 +180,11 @@ def add_game(username):
 @app.route('/game/<game_name>/add_review', methods=['GET', 'POST'])
 def add_review(game_name):
     game = Game.from_mongo(**mongo.db.games.find_one({ "name": game_name }))
-    username = session['username']
-    user_dict = mongo.db.users.find_one({"name": username})
-    user = User.from_mongo(**user_dict)
+    username = session.get('username')
+    if username is not None:
+        user_dict = mongo.db.users.find_one({"name": username})
+        user = User.from_mongo(**user_dict)
 
-    if session:
         form = ReviewForm()
         if form.validate_on_submit():
             author_ref = user.create_author_ref()
@@ -209,9 +210,8 @@ def add_review(game_name):
             user.update_user()
             return redirect(url_for('review', review_id=new_review._id))
         return render_template('add_review.html', game_name=game_name, user=user, game=game, form=form)
-
     else:
-        flash('Please Log In to post a review')
+        flash('Please log in to post a review')
         return redirect(url_for('login'))
 
 @app.route('/user/<username>/games', methods=['GET'])
@@ -220,17 +220,35 @@ def user_games(username):
         flash('Please log in to view content')
         return redirect(url_for('login'))
     elif session.get('username') == username:
-        # TODO: Restructure Data Model top permit holding game data in User collection for optimised querying.
         # Use of extended reference in User model allows for simpler queries to retrieve games and other user data
-        current_user = User.from_mongo(**mongo.db.users.find_one({"_id": ObjectId(session.get("_id"))  }))
-        return render_template('user_games.html', games=current_user.game_list)
-    # TODO: Refactor and permit a public profile.
+        current_user = User.from_mongo(
+                **mongo.db.users.find_one(
+                    {"_id": ObjectId(session.get("_id"))  }
+                    )
+                )
+        return render_template('user_games.html', 
+                games=current_user.game_list)
+    else:
+        user = User.from_mongo(
+                **mongo.db.users.find_one({"name": username})
+                )
+        return render_template('user_games.html', games=user.game_list)
+
 
 
 @app.route('/user/<username>/reviews', methods=['GET'])
 def user_reviews(username):
 
-    user = User.from_mongo(**mongo.db.users.find_one({"_id": ObjectId(session['_id'])}))
+    if session.get('username') == username:
+        user = User.from_mongo(
+                **mongo.db.users.find_one(
+                    {"_id": ObjectId(session.get('_id'))})
+                )
+    else:
+        user = User.from_mongo(
+                **mongo.db.users.find_one({'name': username})
+                )
+
     return render_template('user_reviews.html', user=user)
 
 
@@ -253,4 +271,5 @@ def edit_review(review_id):
         form.title.data = review.name
         form.review_text.data = review.text
     return render_template('edit_review.html', title='Edit Review', form=form)
+
 

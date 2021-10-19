@@ -4,9 +4,30 @@
 <div class="section">
   <div class="tabs is-centered">
     <ul>
-      <li class="is-active tab-item"><a class="tab-link" href={{ url_for('profile', username=session['username']) }} >My Profile</a></li>
-      <li class="tab-item"><a class="tab-link" href= {{ url_for('user_games', username=session['username']) }} >My Games</a></li>
-      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=session['username']) }}>My Reviews</a></li>
+      <li class="is-active tab-item"><a class="tab-link" href={{ url_for('profile', username=user.name) }} >
+          {% if session['username'] == user.name %}
+          My Profile
+          {% else %}
+          {{ user.name }}'s Profile
+          {% endif %}
+        </a>
+      </li>
+      <li class="tab-item"><a class="tab-link" href= {{ url_for('user_games', username=user.name) }} >
+          {% if session['username'] == user.name %}
+          My Games
+          {% else %}
+          {{ user.name }}'s Games
+          {{ endif }}
+        </a>
+      </li>
+      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=user.name }}>
+          {% if session['username'] == user.name %}
+          My Reviews
+          {% else %}
+          {{ user.name }}'s Reviews
+          {{ endif }}
+        </a>
+      </li>
     </ul>
   </div>
 </div>
@@ -26,11 +47,14 @@
     </div>
 
     <div class="content">
+      {% if session['username'] == user.name %}
       <button class="button is-block is-info is-medium">
-        <a href={{ url_for('edit_profile', username=user.name) }}>
+            <a href={{ url_for('edit_profile', username=user.name) }}>
           Edit Profile
         </a>
-      
+      </button>
+      {% else %}
+      {% endif %}
       <br>
       <time datetime=>11:09 PM - 1 Jan 2016</time>
     </div>
