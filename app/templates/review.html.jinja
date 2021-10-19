@@ -1,0 +1,33 @@
+{% extends 'base.html'%}
+
+{% block content %}
+
+<div class="container">
+        <!-- START ARTICLE FEED -->
+    <section class="articles">
+        <div class="column is-8 is-offset-2">
+          <!-- START ARTICLE -->
+            <div class="card article">
+                <div class="card-content">
+                    <div class="media">
+                        <div class="media-center">
+                          <img src={{ review.author_ref['author_avatar'] }} class="author-image" alt="User Avatar">
+                        </div>
+                        <div class="media-content has-text-centered">
+                          <p class="title article-title">{{review.name}}</p>
+                          <p class="subtitle is-6 article-subtitle">{{review.game}} on {{review.game_ref['game_platform']}}</p>
+                            <p class="subtitle is-6 article-subtitle">
+                            <a href={{url_for('user_reviews', username=review.author)}}>{{review.author}}</a> on {{review.pub_date}}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="content article-body">
+                        <p>
+                          {{review.text}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+ {% endblock %}
