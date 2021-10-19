@@ -16,7 +16,7 @@ from flask_pymongo import PyMongo
 
 from app.database_mongo import mongo
 from app.models import User, Game, Review, ReviewList, GameList
-from app.forms import LoginForm, RegisterForm, ReviewForm, AddGameForm 
+from app.forms import LoginForm, RegisterForm, ReviewForm, AddGameForm, EditProfileForm, EditReviewForm 
 
 @app.route("/")
 def main():
@@ -37,20 +37,18 @@ def login():
     if form.validate_on_submit():
 
         user_doc = mongo.db.users.find_one({"email": f"{ form.email.data }"})
-        # remove print statement later
-        print(user_doc)
         if user_doc.get("email") is not None:
-            if check_password_hash(user_doc['_password'], form.password.data):
-                session['username'] = user_doc['name']
-                session['email'] = user_doc['email']
-                session['_id'] = str(user_doc['_id'])
+            if check_password_hash(user_doc.get('_password'),
+                                    form.password.data):
+                current_user = User.from_mongo(**user_doc)
+                session['username'] = current_user.name
+                session['email'] = current_user.email 
+                session['_id'] = str(current_user._id)
                 flash(f"{session['username']} has successfully logged in!")
-                return redirect(url_for('main'))
+                return redirect(url_for('profile', user=current_user))
         else:
             flash('Username Incorrect')
             redirect(url_for('login'))
-    else:
-        print(form.errors)
     return render_template("login.html", title="Sign In", form=form)
 
 
@@ -59,74 +57,54 @@ def register():
     """
     TODO: Add server-side validation.
     """
+    if session.get('username') is not None:
+        return redirect(url_for('profile',
+            username=session.get('username')))
     form = RegisterForm()
-    
     if form.validate_on_submit():
-
-        user_email = mongo.db.users.find_one({"email": f"{form.email.data}"}) 
-
-        if user_email is not None:
-            flash('User Account exists. Have you forgotten your password?')
-            return render_template("register.html", title="Registration", form=form)
-        else:
-            # dataclass used to check type and ensure encapsulation of data
-            try:
-                new_user = User.create_user(password=form.password.data, email=form.email.data, name=form.username.data)
-            except Exception as e:
-                print(f"failed to create user: {e}")
-            else:
-                try:
-                    mongo.db.user.insert_one(dataclasses.asdict(new_user))
-                except Exception as e:
-                    print(f'Error loading new User to database. Please try again. Error: {e}.')
-                    return render_template("register.html", title="Registration", form=form)
-                else:
-                    flash(f'New User: {form.username.data} has been successfully registered.')
-                    session['username'] = new_user.name 
-                    session['email'] = new_user.email
-                    return redirect(url_for('main'))
-    else:
-        print('Registration form did not validate')
-        print(form.errors)
-    return render_template("register.html", title="Registration", form=form)
-
-
+        new_user = User.add_user(
+                password=form.password.data,
+                name = form.username.data,
+                email = form.email.data
+                )
+        flash('Registration Successful')
+        session['username'] = new_user.name
+        session['email'] = new_user.email
+        session['_id'] = str(new_user._id)
+        return redirect(url_for('profile', 
+            username=session.get('username')))
+    return render_template("register.html", 
+                title="Registration", 
+                form=form)
+            
 @app.route('/user/<username>')
 def profile(username):
     """
     If statement prevents access to profile unless logged in. Consider using session cookie to hold boolean value - .is_logged_in
     """
     if session.get('username') is not None:      
-        try:
-            user = mongo.db.users.find_one({"name": username})                
-            print(f"User successfully retrieved: {user}")
-            if user.get("reviews") is not None:
-                print("Getting User reviews")
-                user_reviews = [mongo.db.reviews.find_one({"_id": ObjectId(review)}) for review in user.get("reviews")]               
-            else:
-                # TODO: Insert a placeholder id/reference here.
-                user_reviews = []
-            if user.get("games") is not None:
-                print("Getting User games...")
-                user_games = [mongo.db.games.find_one({"_id": ObjectId(game)}) for game in user.get("game_list")]
-            else:
-                user_games = []
-
-        except Exception as e: 
-            print(f"profile func: {e}")
-            flash('Error. Please log in to continue')
-            return redirect(url_for('login'))
-        else:
-            return render_template("user_profile.html", user=user)
+        current_user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+        return render_template("user_profile.html", title="My Profile" user=current_user)
     else:
         flash('Please log in to access user profile')
         return redirect(url_for('login'))
+
+
+@app.route('/user/<username>/edit_profile', methods=['GET', 'POST'])
+def edit_profile(username):
+    form = EditProfileForm()
+    user = User.from_mongo(**mongo.db.users.find_one({"email": session.get('email')}))
+    if form.validate_on_submit():
+        pass
+    elif request.method == 'GET':
+        pass
 
 
 @app.route('/logout')
 def logout():
     session.pop('username')
     session.pop('email')
+    session.pop('_id')
     flash('Successfully Logged Out.')
     return redirect(url_for('main'))
 
@@ -151,6 +129,7 @@ def games():
 @app.route('/games/<game_name>')
 def game_page(game_name):
     game = mongo.db.games.find_one({"name": game_name})
+    # TODO: Rewrite this to account for publisher info in game document
     if game.get('publisher') is not None:
         pub_id = game.get('publisher') 
         print(f"game_page func: {pub_id}")
@@ -166,7 +145,7 @@ def add_game(username):
         form = AddGameForm()
         # is this try...except block necessary?
         
-        current_user = mongo.db.user.find_one({"name": username})
+        current_user = User.from_mongo(**mongo.db.user.find_one({"name": username}))
         if current_user is None:
             flash('Oops. We encountered a problem. Please log in to continue')
             session.pop('username')
@@ -181,64 +160,60 @@ def add_game(username):
                 publisher = form.publisher.value
                 # ensure publisher is selectfield with id as values 
                 new_game_name = label.replace(" ", "_").lower() 
-                new_game = Game(label=label, name=new_game_name, platform=platform, year=year, genre=genre, publisher=publisher)
+                new_game = Game.add_game(label=label, 
+                        platform=platform, 
+                        year=year, 
+                        genre=genre, 
+                        publisher=publisher)
+                new_game_ref = new_game.create_game_ref() 
 
-
-                try:
-                    added_game = mongo.db.games.insert_one(dataclasses.asdict(new_game))
-                except Exception as e:
-                    print(e)
-                    flash('Failed to add game. Please try again')
-                    return redirect(url_for('add_game', username=session['username']))
-                else:
-                    flash('Game Added Successfully')
-                    # write from_dict function to instantiate User from dict in mongodb
-                    # Add new game to Users list of games
-                    current_user_games = current_user['game_list']
-                    # check if this return value is correct
-                    current_user_games.append(added_game.inserted_id)
-
-                    current_user['game_list'] = current_user_games
-
-                    mongo.db.users.update_one({ "$addToSet" : {"game_list": ObjectId(added_game.inserted_id)}})
-                    
-
-                    return redirect(url_for('profile', username=session['username']))
-            # else block for when form does not validate or for GET request
+                # Add new game to Users list of games
+                current_user.game_list.append(new_game_ref) 
+                # Update User on the database
+                current_user.update_user()    
+                flash('Game Added Successfully')
+                return redirect(url_for('profile', 
+                    username=session['username']))
             else:
-                return render_template('add_game.html', username=username, form=form)
+                return render_template('add_game.html', 
+                                username=username, 
+                                form=form)
     else:
         flash('Please log in to continue')
         return redirect(url_for('login'))
 
 
 @app.route('/user/<username>/add_review', methods=['GET', 'POST'])
-def add_review(username):
+def add_review(username, game):
 
     if session:
-        form = ReviewForm()
+
+        form = ReviewForm(game)
         if form.validate_on_submit():
             username = session['username']
-            user = mongo.db.users.find_one({"name": username})
+            user_dict = mongo.db.users.find_one({"name": username})
+            user = User.from_mongo(**user_dict)
+            author_ref = user.create_author_ref()
             pub_date = str(datetime.now(timezone.utc))
-            game = mongo.db.game.find_one({"_id": form.game.data})
-            #game = played_it_db.get_doc_obj({"@id": form.game.data})
+            game_ref = game.create_game_ref()
             
-            new_review = Review(title=form.title.data, author=username, _author=user['@id'], text=form.review_text.data, game=game['label'], _game_id=form.game.data, pub_date=pub_date)
+            new_review = Review.add_review(
+                    name=form.title.data,
+                    game=game.label,
+                    author=user.name, 
+                    author_id=user._id, 
+                    text=form.review_text.data, 
+                    game_id=game._id, 
+                    pub_date=pub_date, 
+                    game_ref=game_ref, 
+                    author_ref=author_ref
+                    )
+            flash('Review Successfully Posted')
+            redirect(url_for('review', review_id=new_review._id))
+        elif request.method == 'GET':
+            form.game.data = game._id
 
-            try:
-                mongo.db.reviews.insert_one(dataclasses.asdict(new_review))
-            except Exception as e:
-                print(f"add_review Exception: {e}")
-                flash("Review not posted. Could not connect to database.")
-                redirect(url_for('profile', username=username))
-            else:            
-                flash('Review Successfully Added')
-                return redirect(url_for('profile', username=username))
-        else:
-            flash('Error with form validation. Please try again.')
-
-        return render_template('add_review.html', username=username, form=form)
+        return render_template('add_review.html', username=username, game=game, form=form)
 
     else:
         flash('Please Log In to post a review')
@@ -264,3 +239,25 @@ def user_reviews(username):
     user = mongo.db.users.find_one({"_id": ObjectId(session['_id'])})
     reviews = [mongo.db.reviews.find({'_id': ObjectId(review)}) for review in user.get('reviews')]
     return render_template('user_reviews.html', user_reviews=reviews)
+
+
+@app.route('/review/<review_id>', methods=['GET'])
+def review(review_id):
+    review = mongo.db.reviews.find_one({"_id": ObjectId(review_id) })
+    return render_template('review.html', review=review)
+
+
+@app.route('/review/<review_id>/edit_review', methods=['GET', 'POST'])
+def edit_review(review_id):
+    form = EditReviewForm()
+    review = Review.from_mongo(**mongo.db.reviews.find_one({ "_id": ObjectId(review_id) }))
+    user_email = session.get('email')
+    if form.validate_on_submit():
+        review.name = form.title.data
+        review.text = form.review_text.data
+        review.update_review()
+    elif request.method == "GET":
+        form.title.data = review.name
+        form.review_text.data = review.text
+    return render_template('edit_review.html', title='Edit Review', form=form)
+
