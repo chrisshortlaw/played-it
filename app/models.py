@@ -193,7 +193,8 @@ class Game(BaseModel):
 
     @classmethod
     def add_game(cls, label, platform, year, genre, publisher, db_loc=mongo.db.games):
-        publisher = mongo.db.publisher.find_one({ "_id": publisher })
+        print(publisher)
+        publisher = mongo.db.publisher.find_one({ "_id": ObjectId(publisher) })
         new_game = Game.create_game(label=label, platform=platform, year=year, genre=genre, publisher=publisher["label"], publisher_id=publisher["_id"])
         uploaded_game = db_loc.insert_one(new_game.to_mongo_dict())
         new_game._id = uploaded_game.inserted_id
@@ -305,6 +306,7 @@ class Review(BaseModel):
         review_dict['review_author_id'] = self.author_id
         review_dict['review_text'] = self.text
         review_dict['review_pub_date'] = self.pub_date
+        return review_dict
 
 
 @dataclass
