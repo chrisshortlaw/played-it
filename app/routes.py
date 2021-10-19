@@ -23,12 +23,11 @@ def main():
     """
     grabs documents from db and displays on main page
     """
-    documents = mongo.db.publisher.find({})
     if 'username' in session:
         flash(f'Logged in as {session["username"]}')
     else:
         flash('You are not logged in.')
-    return render_template("main.html", title="Main", documents=documents)
+    return render_template("main.html", title="Main")
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -116,25 +115,15 @@ def games():
     Second query grabs a list of publishers.
     """
     games = mongo.db.games.find({})
-    games_with_embedded_publishers = []
-    for game in games:
-        publisher = mongo.db.publisher.find_one({"_id": ObjectId(game.get("publisher"))})
-        game["pub_doc"] = publisher
-        games_with_embedded_publishers.append(game)
-
-    print(games_with_embedded_publishers[0])
-    return render_template('browse_games.html', games=games_with_embedded_publishers)
+    return render_template('browse_games.html', games=games)
 
 
 @app.route('/games/<game_name>')
 def game_page(game_name):
-    game = mongo.db.games.find_one({"name": game_name})
+    game = Game.from_mongo(**mongo.db.games.find_one({"name": game_name}))
+    user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
     # TODO: Rewrite this to account for publisher info in game document
-    if game.get('publisher') is not None:
-        pub_id = game.get('publisher') 
-        print(f"game_page func: {pub_id}")
-        publisher = mongo.db.publisher.find_one({"_id": ObjectId(pub_id)})
-    return render_template('game.html', game_name=game_name, game=game, publisher=publisher)
+    return render_template('game.html', game_name=game_name, game=game, user=user)
 
 
 @app.route('/user/<username>/add_game', methods=['GET', 'POST'])
@@ -145,11 +134,12 @@ def add_game(username):
         form = AddGameForm()
         # is this try...except block necessary?
         
-        current_user = User.from_mongo(**mongo.db.user.find_one({"name": username}))
+        current_user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
         if current_user is None:
             flash('Oops. We encountered a problem. Please log in to continue')
             session.pop('username')
             session.pop('email')
+            session.pop('_id')
             return redirect(url_for('login'))
         else:
             if form.validate_on_submit():
@@ -157,7 +147,7 @@ def add_game(username):
                 platform = form.platform.data
                 year = int(form.year.data)
                 genre = form.genre.data
-                publisher = form.publisher.value
+                publisher = form.publisher.data
                 # ensure publisher is selectfield with id as values 
                 new_game_name = label.replace(" ", "_").lower() 
                 new_game = Game.add_game(label=label, 
@@ -183,16 +173,16 @@ def add_game(username):
         return redirect(url_for('login'))
 
 
-@app.route('/user/<username>/add_review', methods=['GET', 'POST'])
-def add_review(username, game):
+@app.route('/game/<game_name>/add_review', methods=['GET', 'POST'])
+def add_review(game_name):
+    game = Game.from_mongo(**mongo.db.games.find_one({ "name": game_name }))
+    username = session['username']
+    user_dict = mongo.db.users.find_one({"name": username})
+    user = User.from_mongo(**user_dict)
 
     if session:
-
-        form = ReviewForm(game)
+        form = ReviewForm()
         if form.validate_on_submit():
-            username = session['username']
-            user_dict = mongo.db.users.find_one({"name": username})
-            user = User.from_mongo(**user_dict)
             author_ref = user.create_author_ref()
             pub_date = str(datetime.now(timezone.utc))
             game_ref = game.create_game_ref()
@@ -209,11 +199,13 @@ def add_review(username, game):
                     author_ref=author_ref
                     )
             flash('Review Successfully Posted')
-            redirect(url_for('review', review_id=new_review._id))
-        elif request.method == 'GET':
-            form.game.data = game._id
-
-        return render_template('add_review.html', username=username, game=game, form=form)
+            review_ref = new_review.create_review_ref()
+            game.reviews.append(review_ref)
+            game.update_game()
+            user.reviews.append(review_ref)
+            user.update_user()
+            return redirect(url_for('review', review_id=new_review._id))
+        return render_template('add_review.html', game_name=game_name, user=user, game=game, form=form)
 
     else:
         flash('Please Log In to post a review')
@@ -226,25 +218,23 @@ def user_games(username):
         return redirect(url_for('login'))
     elif session.get('username') == username:
         # TODO: Restructure Data Model top permit holding game data in User collection for optimised querying.
-        user = mongo.db.users.find_one({"_id": ObjectId(session['_id'])})
-        games = [mongo.db.games.find_one({"_id": ObjectId(game)}) for game in user.get('game_list')]
-        return render_template('user_games.html', games=games)
-    else:
-        # TODO: Refactor this for a public profile
-        return redirect(url_for('login'))
+        # Use of extended reference in User model allows for simpler queries to retrieve games and other user data
+        current_user = User.from_mongo(**mongo.db.users.find_one({"_id": ObjectId(session.get("_id"))  }))
+        return render_template('user_games.html', games=current_user.game_list)
+    # TODO: Refactor and permit a public profile.
 
 
 @app.route('/user/<username>/reviews', methods=['GET'])
 def user_reviews(username):
-    user = mongo.db.users.find_one({"_id": ObjectId(session['_id'])})
-    reviews = [mongo.db.reviews.find({'_id': ObjectId(review)}) for review in user.get('reviews')]
-    return render_template('user_reviews.html', user_reviews=reviews)
+
+    user = User.from_mongo(**mongo.db.users.find_one({"_id": ObjectId(session['_id'])}))
+    return render_template('user_reviews.html', user=user)
 
 
 @app.route('/review/<review_id>', methods=['GET'])
 def review(review_id):
     review = mongo.db.reviews.find_one({"_id": ObjectId(review_id) })
-    return render_template('review.html', review=review)
+    return render_template('review.html.jinja', review=review)
 
 
 @app.route('/review/<review_id>/edit_review', methods=['GET', 'POST'])
