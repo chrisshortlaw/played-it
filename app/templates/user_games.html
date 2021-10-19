@@ -29,25 +29,12 @@
           <div class="card-content">
             <div class="media">
               <div class="media-content">
-                <p class="title is-4 no-padding"><a href={{ url_for('game_page', game_name=game['name']) }}>{{game['label']}}</a></p>
+                <p class="title is-4 no-padding"><a href={{ url_for('game_page', game_name=game['game_name']) }}>{{game['game_label']}}</a></p>
                 <p>
-                  {{ game['genre'] }}
+                  {{ game['game_platform'] }}
                   </p>
-                <p class="subtitle is-6">{{game['publisher']}}</p>
+                <p class="subtitle is-6">{{game['platform']}}</p>
               </div>
-            </div>
-            <div class="content" aria-label="Sample Review Text">
-              {# Display some review text on the card. Consider adding stylised quotes above to indicate it is a review #}
-              {% if game['review_texts'] %}
-                {% for review in game['review_texts'] if loop.index0 == 0 %}
-                {# Limit the text to a single review and limit the review to 280 characters #}
-                  {% for text in review if loop.index0 < 279 %}
-                    {{ text }}
-                  {% endfor %}
-                {% endfor %}
-              {% else %}
-                <p>A sample review goes here.</p>
-              {% endif %}
             </div>
           </div>
         </div>

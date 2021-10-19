@@ -16,14 +16,14 @@
   <div class="container">
     <!-- Start Carousel -->
     <div id="carousel-demo" class="carousel" data-loop="true">
-      {% for user_review in user_reviews %}
+      {% for review in user.reviews %}
       <div class="item-{{ loop.index }}">
         <!-- Slide Content -->
         <div class="tile is-ancestor">
           <div class="tile is-parent">
             <div class="tile is-child box">
-              <p class="title is-4">{{ user_review['author'] }}</p>
-              <p class="content">{{ user_review['text'] }}</p>
+              <p class="title is-4">{{ review['review_author'] }}</p>
+              <p class="content">{{ review['review_text'] }}</p>
             </div>
           </div>
         </div>
@@ -33,7 +33,7 @@
   </div>
   <br>
   <br>
-  <a href="{{ url_for('add_game', username=session['username']) }}" class="button is-link">Add a Game</a>
+  <a href={# {{ url_for('add_review', username=session['username']) }#}} class="button is-link">Add a Review</a>
 </section>
 
 {% endblock %}
