@@ -27,18 +27,23 @@
                     </figure>
                   </div>
                   <div class="media-content">
-                    <p class="title is-4 no-padding">{{game['label']}}</p>
+                    <p class="title is-4 no-padding"><a class='is-underlined' href={{ url_for('game_page', game_name=game.name) }}>{{game['label']}}</a></p>
                     <p>
                       <span class="title is-6">
-                        <a href=>{{game['name']}}</a> </span> </p>
-                    <p class="subtitle is-6">{{game['pub_doc']['label']}}</p>
+                        <a href=>{{game.label}}</a> </span> </p>
+                    <p class="subtitle is-6">{{game.publisher}}</p>
                     <p class="subtitle is-6">{{ game['genre'] }}
                   </div>
                 </div>
                 <div class="content">
-                  {% if game['reviews'] %}
-                    {% for review in reviews %}
-                      <p>{{ review }}</p>
+
+                  {% if game.reviews %}
+                    {% for review in game.reviews %}
+                    <span><i class="fa fa-quote-right fa-4x" aria-hidden="true"></i></span>
+                    <span class="has-text-weight-semibold"><a href="">{{ review['review_title'] }}</a></span>
+                    <p><em>{{ review['review_author'] }}</em></p>
+                      <p>{{ review['review_text'] }}</p>
+                      <p>{{ review['review_pub_date'] }}
                     {% endfor %}
                   {% else %}
                     <p>Lorem Ipsum Dipsum Dolorem Blah</p>
