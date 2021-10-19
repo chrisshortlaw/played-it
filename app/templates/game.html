@@ -5,39 +5,72 @@
 <section class="hero is-medium" style="background: url('../static/assets/placeholder_berserk.jpg') center/cover no-repeat fixed">
   <div class="hero-body has-text-white">
     <p class="title is-2 has-text-white-ter">
-      {{ game.get('label') }}
+      {{ game.label }}
     </p>
     <p class="subtitle is-4 has-text-white-ter">
-      Publisher: {{ publisher.get('label') }} 
+      Publisher: {{ game.publisher }} 
     </p>
     <br>
     <p class="is-size-5">
-      Genre: {{ game['genre'] }} 
+      Genre: {{ game.genre }} 
     </p>
     <p class="is-size-5">
-      Release Year: {{ game['year'] }}
+      Release Year: {{ game.year }}
     </p>
     <p class="is-size-5">
-      Platform: {{ game['platform'] }}
+      Platform: {{ game.platform }}
     </p>
   </div>
 </section>
-{#
+<br />
+<button class="button is-block is-primary is-fullwidth is-medium"><a href={{ url_for('add_review', game_name=game_name) }}>Add a Review</a></button>
+
 <section class="section is-medium">
-  {% if reviews.length < 1 %}
+  <div class="row columns is-multiline">
+  {% if game.reviews %}
+    {% for review in game.reviews %}
+      <div class="column is-4">
+        <div class="card">
+          <div class="card-content">
+              <p class="title">
+                {{ review['review_text'] }}
+              </p>
+              <p class="subtitle">
+              {{ review["review_author"] }} 
+              </p>
+            </div>
+          <footer class="card-footer">
+            {% if user.name == review["review_author"] %}
+            <p class="card-footer-item">
+              <span>
+                <a href={{ url_for('edit_review', review_id=review['review_author_id']) }}>Edit This Review</a>
+              </span>
+            </p>
+            {% else %}
+            {% endif %}
+            <p class="card-footer-item">
+              <span>
+                <a href=""><button class="button">Write a review</button></a>
+              </span>
+            </p>
+          </footer>
+        </div>
+      </div>
+  
+    {% endfor %}
+    
+  {% else %}
     <div class="container">
-      <div class="">No reviews yet. Why not write one?</div>
-      <a href="{{ url_for('add_review', game_id=game['@id']) }}" class="button">
-        <span class="material-icons-outlined">
-          add_circle
+      <div class="has-black-text">No reviews yet. Why not write one?</div>
+      <a href={{ url_for('add_review', game_name=game_name) }} class="button">
+        <span class="">
+          <i class="fa fa-pencil-square" aria-hidden="true"></i>
         </span>
         Add A Review
       </a>
     </div>
-
-  {% else %}
-    {% for review in reviews %}
-    INsert MORE here #}
-</section>
+  {% endif %}
+  </div>
+</section> 
 
 {% endblock %}
