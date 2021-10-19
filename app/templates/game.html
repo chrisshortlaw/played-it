@@ -40,13 +40,15 @@
               </p>
             </div>
           <footer class="card-footer">
-            {% if user.name == review["review_author"] %}
+            {% if session['username'] %}
+              {% if user.name == review["review_author"] %}
             <p class="card-footer-item">
               <span>
                 <a href={{ url_for('edit_review', review_id=review['review_author_id']) }}>Edit This Review</a>
               </span>
             </p>
             {% else %}
+            {% endif %}
             {% endif %}
             <p class="card-footer-item">
               <span>
