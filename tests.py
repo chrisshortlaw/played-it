@@ -208,7 +208,7 @@ class TestUser(unittest.TestCase):
         new_user = User.add_user(password='pass', name='test_user1', email='test1@testmail.com', db_loc=mongo.db.tests)
 
         check_upload = mongo.db.tests.find_one({"name": "test_user1"})
-        self.assertEqual(new_user.id, check_upload["_id"])
+        self.assertEqual(new_user._id, check_upload["_id"])
         
         new_user.update_user_with_dict(mongo.db.tests, **{"name": "mike_1", "email": "mike1@email.com"})
 
@@ -217,17 +217,17 @@ class TestUser(unittest.TestCase):
         
         check_upload = mongo.db.tests.find_one({ "name": "mike_1" })
 
-        self.assertEqual(new_user.id, check_upload["_id"])
+        self.assertEqual(new_user._id, check_upload["_id"])
 
 
     def test_user_delete(self):
 
         new_user = User.add_user("pass", "test_user2", "user@usermail.com", mongo.db.tests)
-        check_upload = mongo.db.tests.find_one({"_id": new_user.id})
+        check_upload = mongo.db.tests.find_one({"_id": new_user._id})
         self.assertTrue(check_upload is not None)
 
         new_user.delete_user(mongo.db.tests)
-        check_upload = mongo.db.tests.find_one({"_id": new_user.id})
+        check_upload = mongo.db.tests.find_one({"_id": new_user._id})
         self.assertTrue(check_upload is None)
 
 
