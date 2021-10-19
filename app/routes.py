@@ -84,7 +84,7 @@ def profile(username):
     """
     if session.get('username') is not None:      
         current_user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-        return render_template("user_profile.html", title="My Profile" user=current_user)
+        return render_template("user_profile.html", title="My Profile", user=current_user)
     else:
         flash('Please log in to access user profile')
         return redirect(url_for('login'))
