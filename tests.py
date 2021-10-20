@@ -33,8 +33,8 @@ class TestUser(unittest.TestCase):
 
         
         fake_pub = Publisher.create_publisher("Nintendo")
-        uploaded_pub = mongo.db.tests.insert_one(fake_pub.to_mongo_dict())
-        new_game = Game.add_game(label='fake game 4', platform='SNES', year=1996, genre='Sports', publisher=fake_pub.label, db_loc= mongo.db.tests)
+        fake_pub.upload_publisher(db_loc=mongo.db.tests)
+        new_game = Game.add_game(label='fake game 4', platform='SNES', year=1996, genre='Sports', publisher=fake_pub, db_loc= mongo.db.tests)
         check_game_dict = Game.from_mongo(**(mongo.db.tests.find_one({"label": "fake game 4"})))
         self.assertTrue(check_game_dict._id is not None)
         self.assertEqual(check_game_dict._id, new_game._id)
@@ -44,9 +44,8 @@ class TestUser(unittest.TestCase):
         new_user = User.add_user(password="pass", name="test_user1", email="test@testmail.com", db_loc=mongo.db.tests)
 
         fake_publisher = Publisher.create_publisher("Nintendo")
-        upload_publisher = mongo.db.tests.insert_one(fake_publisher.to_mongo_dict())
-
-        new_game = Game.add_game("tekken", 'PlayStation', year=1997, genre='fighting', publisher=upload_publisher.inserted_id, db_loc=mongo.db.tests)       
+        fake_publisher.upload_publisher(db_loc=mongo.db.tests)
+        new_game = Game.add_game("tekken", 'PlayStation', year=1997, genre='fighting', publisher=fake_publisher, db_loc=mongo.db.tests)       
         new_review = Review.add_review(name='Good', game=new_game.name, game_id=new_game._id, author=new_user.name, author_id=new_game._id, text="Okay", pub_date='12-12-21', db_loc=mongo.db.tests)
 
         self.assertTrue(new_user._id is not None)
@@ -128,12 +127,32 @@ class TestUser(unittest.TestCase):
 
 
     def test_add_game(self):
-        pub_doc = mongo.db.publisher.find_one({"name": "nintendo"})
-        new_game = Game.create_game(label='fake game 3', platform="SNES", year=1996, genre="action", publisher=pub_doc.get('label'), publisher_id=pub_doc.get('_id'))
-        self.assertEqual(mongo.db.tests.find_one({"name": new_game.name}), None)
-        added_game = mongo.db.tests.insert_one(new_game.__dict__)
-        retrieved_game = mongo.db.tests.find_one({"_id": added_game.inserted_id})
-        self.assertEqual(retrieved_game.get("publisher_id"), pub_doc["_id"])
+        pub_doc = Publisher.from_mongo(**mongo.db.publisher.find_one({"name": "nintendo"}))
+        self.assertEqual(mongo.db.tests.find_one({"name": "fake_game"}), None)
+        
+        new_game = Game.add_game(
+                label='fake_game', 
+                platform='PlayStation', 
+                year=1998, 
+                genre='Sports', 
+                publisher=pub_doc, 
+                db_loc=mongo.db.tests
+                )
+        retrieved_game = mongo.db.tests.find_one({"_id": new_game._id})
+        self.assertEqual(retrieved_game.get("publisher_id"), pub_doc._id)
+        pub_doc2 = mongo.db.publisher.find_one({"name": "nintendo"})
+        new_game2 = Game.add_game(
+                        label='fake game 3', 
+                        platform="SNES", 
+                        year=1996, 
+                        genre="action", 
+                        publisher=pub_doc2, 
+                        db_loc = mongo.db.tests
+                        )
+        retrieve_game_2 = mongo.db.tests.find_one({"label": "fake game 3"})
+        self.assertEqual(retrieve_game_2.get("name"), new_game2.name)
+
+
 
     def test_game_retrieval(self):
         pass
@@ -169,10 +188,9 @@ class TestUser(unittest.TestCase):
         """
         Test the update function of the update review.
         """
-        fake_publisher = Publisher.create_publisher('Nintendo')
-        upload_publisher = mongo.db.tests.insert_one(fake_publisher.to_mongo_dict())
+        get_publisher = mongo.db.publisher.find_one({"label": "Nintendo"})
         new_user = User.add_user(password='pass', name='test_user1', email='test1@testmail.com', db_loc=mongo.db.tests)
-        new_game = Game.add_game(label="fake_game3", platform='Wii', year=2003, genre='action', publisher="Nintendo", db_loc=mongo.db.tests)
+        new_game = Game.add_game(label="fake_game3", platform='Wii', year=2003, genre='action', publisher=get_publisher, db_loc=mongo.db.tests)
         new_review = Review.add_review(
                 name="I like this", game="fake game 3", game_id=new_game._id, 
                 author=new_user.name, author_id = new_user._id, 
