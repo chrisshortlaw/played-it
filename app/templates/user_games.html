@@ -17,7 +17,7 @@
           My Games
           {% else %}
           {{ user.name }}'s Games
-          {{ endif }}
+          {% endif %}
         </a>
       </li>
       <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=user.name }}>
@@ -25,7 +25,7 @@
           My Reviews
           {% else %}
           {{ user.name }}'s Reviews
-          {{ endif }}
+          {% endif %}
         </a>
       </li>
     </ul>
