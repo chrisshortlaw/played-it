@@ -10,7 +10,7 @@
                        <form method="post" action="{{ url_for('edit_review', review_id=review_id) }}">
                           {{ form.hidden_tag() }}
                           {{ form.csrf_token }}
-                          <p class="has-text-black">title</p>
+                          <label for="title" class="has-text-black">title</label>
                           <div class="field">
                             <div class="control">
                               {{ form.title(size=32) }}
@@ -19,7 +19,7 @@
                               {% endfor %}
                             </div>
                           </div>
-                          <p class="has-text-black">Text</p>
+                          <label for="review_text" class="has-text-black">Text</label>
                           <div class="field">
                             <div class="control">
                               {{ form.review_text(size=32) }}

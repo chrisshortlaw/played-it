@@ -9,6 +9,7 @@
                     <div class="box">
                       <form method="POST" action="{{ url_for('login') }}">
                         {{ form.hidden_tag() }}
+                        <label for="email" class="has-black-text">Email</label>
                         <div class="field">
                           <div class="control">
                             {{ form.email(size=32) }}
@@ -17,6 +18,7 @@
                             {% endfor %}
                           </div>
                         </div>
+                        <label for="password" class="has-text-black">Password</label>
                         <div class="field">
                           <div class="control">
                             {{ form.password(size=32) }}
@@ -37,8 +39,6 @@
                     </div>
                     <p class="has-text-grey">
                     <a href="{{ url_for('register') }}">Sign Up</a> &nbsp;·&nbsp;
-                        <a href="../">Forgot Password</a> &nbsp;·&nbsp;
-                        <a href="../">Need Help?</a>
                     </p>
                 </div>
             </div>

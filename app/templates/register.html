@@ -7,10 +7,10 @@
                     <h3 class="title has-text-black">Register</h3>
                     <hr class="login-hr">
                     <div class="box">
-                       <form method="post" action="{{ url_for('register') }}">
+                       <form method="post" action="{{ url_for('register') }}" id="register-form">
                           {{ form.hidden_tag() }}
                           {{ form.csrf_token }}
-                          <p class="has-text-black">Enter your Email</p>
+                          <label for="email" class="has-text-black">Enter your Email</label>
                           <div class="field">
                             <div class="control">
                               {{ form.email(size=32) }}
@@ -19,7 +19,7 @@
                               {% endfor %}
                             </div>
                           </div>
-                          <p class="has-text-black">Enter a Username</p>
+                          <label for="username" class="has-text-black">Enter a Username</label>
                           <div class="field">
                             <div class="control">
                               {{ form.username(size=32) }}
@@ -29,7 +29,7 @@
 
                             </div>
                           </div>
-                          <p class="has-text-black">Enter a password</p>
+                          <label for="password" class="has-text-black">Enter a password</label>
                           <div class="field">
                             <div class="control">
                               {{ form.password(size=32) }}
@@ -39,7 +39,8 @@
 
                             </div>
                           </div>
-                          <p class="has-text-black">Confirm password</p>
+                          <label for="confirm" class="has-text-black">Confirm password</label>
+
                           <div class="field">
                             <div class="control">
                               {{ form.confirm(size=32) }}

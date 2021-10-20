@@ -11,7 +11,7 @@
             <form method="post" action={{ url_for('add_review', game_name=game.name) }}>
               {{ form.hidden_tag() }}
               {{ form.csrf_token }}
-              <p class="has-text-black">Review Title</p>
+              <label for="title" class="has-text-black">Review Title</label>
               <div class="field">
                 <div class="control">
                   {{ form.title(size=32) }}
@@ -25,7 +25,7 @@
                 <span class="has-text-black">{{ game.label }}</span>
               </div>
               <br />
-              <p class="has-text-black">Review:</p>
+              <label for="review" class="has-text-black">Review:</label>
               <div class="field">
                 <div class="control">
                   {{ form.review_text(size=32) }}
