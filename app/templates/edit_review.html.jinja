@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+  {% block content %}
+    <section class="hero is-success is-fullheight">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <div class="column is-4 is-offset-4">
+                    <h3 class="title has-text-black">Edit Profile</h3>
+                    <hr class="login-hr">
+                    <div class="box">
+                       <form method="post" action="{{ url_for('edit_review', review_id=review_id) }}">
+                          {{ form.hidden_tag() }}
+                          {{ form.csrf_token }}
+                          <p class="has-text-black">title</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.title(size=32) }}
+                              {% for error in form.title.errors%}
+                              <span class="has-text-danger">{{ error }}</span>
+                              {% endfor %}
+                            </div>
+                          </div>
+                          <p class="has-text-black">Text</p>
+                          <div class="field">
+                            <div class="control">
+                              {{ form.review_text(size=32) }}
+                              {% for error in form.review_text.errors %}
+                              <span class="has-text-danger">{{ error }}</span>
+                              {% endfor %}
+
+                            </div>
+                          </div>
+                        </div>
+                              {{ form.submit() }}
+                        </div>
+                        </form>
+                    </div>
+                  </div>
+            </div>
+        </div>
+    </section>
+  {% endblock %}
+ 

@@ -117,9 +117,9 @@ def edit_profile(username):
             form.email.data = user.email
             form.username.data = user.name
             form.bio.data = user.bio
-            return render_template('edit_profile.html', 
+            return render_template('edit_profile.html.jinja', 
                                     form=form, 
-                                    user=user)
+                                    user=user, title="Edit Profile")
     elif session_name != username:
         return redirect(url_for('edit profile', username=session_name))
     else:
@@ -282,7 +282,7 @@ def user_reviews(username):
 @app.route('/review/<review_id>', methods=['GET'])
 def review(review_id):
     review = mongo.db.reviews.find_one({"_id": ObjectId(review_id) })
-    return render_template('review.html.jinja', review=review)
+    return render_template('review.html.jinja', title="Review", review=review)
 
 
 @app.route('/review/<review_id>/edit_review', methods=['GET', 'POST'])
@@ -299,7 +299,7 @@ def edit_review(review_id):
         elif request.method == "GET":
             form.title.data = review.name
             form.review_text.data = review.text
-        return render_template('edit_review.html', 
+        return render_template('edit_review.html.jinja', 
                                 title='Edit Review', 
                                 form=form)
     else:
