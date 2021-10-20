@@ -7,7 +7,7 @@
                     <h3 class="title has-text-black">Edit Profile</h3>
                     <hr class="login-hr">
                     <div class="box">
-                       <form method="post" action="{{ url_for('edit_profile', username=username) }}">
+                       <form method="post" action="{{ url_for('edit_profile', username=session['username']) }}">
                           {{ form.hidden_tag() }}
                           {{ form.csrf_token }}
                           <p class="has-text-black">Username</p>
@@ -38,8 +38,8 @@
                               {% endfor %}
 
                           </div>
-                              {{ form.submit() }}
                         </div>
+                              {{ form.submit() }}
                         </form>
                     </div>
                 </div>
