@@ -52,7 +52,12 @@
             {% endif %}
             <p class="card-footer-item">
               <span>
-                <a href=""><button class="button">Write a review</button></a>
+                <a href={{ url_for('add_review', game_name=game.name) }}><button class="button">Write a review</button></a>
+              </span>
+            </p>
+            <p class="card-footer-item">
+              <span>
+                <a href={{ url_for('review', review_id=review['review_id']) }}>Go to Review Page</a>
               </span>
             </p>
           </footer>
