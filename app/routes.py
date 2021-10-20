@@ -97,7 +97,6 @@ def profile(username):
 @app.route('/user/<username>/edit_profile', methods=['GET','POST'])
 def edit_profile(username):
     # TODO: Finish this.
-    form = EditProfileForm()
     session_name = session.get('username')
     if session_name is not None and session_name == username: 
         user = User.from_mongo(
@@ -105,6 +104,7 @@ def edit_profile(username):
                     {"email": session.get('email')}
                     )
                 )
+        form = EditProfileForm(current_username=user.name, current_email=user.email)
         if form.validate_on_submit():
             user.email = form.email.data
             user.name = form.username.data
@@ -117,11 +117,11 @@ def edit_profile(username):
             form.email.data = user.email
             form.username.data = user.name
             form.bio.data = user.bio
-            return render_template('edit_profile.html.jinja', 
+        return render_template('edit_profile.html.jinja', 
                                     form=form, 
                                     user=user, title="Edit Profile")
     elif session_name != username:
-        return redirect(url_for('edit profile', username=session_name))
+        return redirect(url_for('profile', username=session_name))
     else:
         flash('Please log in to edit your profile')
         return redirect(url_for('login'))
@@ -159,6 +159,10 @@ def game_page(game_name):
 
 @app.route('/user/<username>/add_game', methods=['GET', 'POST'])
 def add_game(username):
+    """
+    Users can add a game and have a reference to this game appear on their user profile.
+    """
+
     if 'username' in session:
         # As above, this checks if the session cookie has a username key
         # if not, send the user to a login screen.
@@ -204,8 +208,12 @@ def add_game(username):
         return redirect(url_for('login'))
 
 
+
 @app.route('/game/<game_name>/add_review', methods=['GET', 'POST'])
 def add_review(game_name):
+    """
+    Adds a review and updates the user and game objects, accordingly.
+    """
     game = Game.from_mongo(**mongo.db.games.find_one({ "name": game_name }))
     username = session.get('username')
     if username is not None:
@@ -233,7 +241,10 @@ def add_review(game_name):
             review_ref = new_review.create_review_ref()
             game.reviews.append(review_ref)
             game.update_game()
+            game_ref = game.create_game_ref()
             user.reviews.append(review_ref)
+            if game_ref not in user.game_list:
+                user.game_list.append(game_ref)
             user.update_user()
             return redirect(url_for('review', review_id=new_review._id))
         return render_template('add_review.html', game_name=game_name, user=user, game=game, form=form)
@@ -287,20 +298,83 @@ def review(review_id):
 
 @app.route('/review/<review_id>/edit_review', methods=['GET', 'POST'])
 def edit_review(review_id):
+    """
+    Allows users to edit reviews. Ensures the extended ref contained in the game object stays current by checking if the reference and the review share the same time. If they do, remove that review_ref and push the other review_ref on to the list.
+    """
     form = EditReviewForm()
+    print(review_id)
     review = Review.from_mongo(**mongo.db.reviews.find_one({ "_id": ObjectId(review_id) }))
+    game = Game.from_mongo(**mongo.db.games.find_one({ "_id":review.game_id }))
     user_name = session.get('username')
     if user_name == review.author_ref['author_name']:
+        user = User.from_mongo(**mongo.db.users.find_one({ "name": user_name }))
 
         if form.validate_on_submit():
             review.name = form.title.data
             review.text = form.review_text.data
+            review_ref = review.create_review_ref()
             review.update_review()
+            for game_review in game.reviews:
+                if game_review.get('review_pub_date') == review.pub_date:
+                    game.reviews.remove(game_review)
+            game.reviews.append(review_ref)
+
+            game.update_game()
+            for user_review in user.reviews:
+                if user_review.get('review_pub_date') == review.pub_date:
+                    user.reviews.remove(user_review)
+            user.reviews.append(review_ref)
+            user.update_user()
+            return redirect(url_for('review', review_id=review_id))
         elif request.method == "GET":
             form.title.data = review.name
             form.review_text.data = review.text
-        return render_template('edit_review.html.jinja', 
+    return render_template('edit_review.html.jinja', 
                                 title='Edit Review', 
+                                review_id=review_id,
                                 form=form)
-    else:
-        return redirect(url_for('review', review_id=review._id))
+
+@app.route('/add_game_ref/<game_id>', methods=['POST'])
+def add_game_ref(game_id):
+    form = AddGameRef()
+    if form.validate_on_submit():
+        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+        game = Game.from_mongo(**mongo.db.games.find_one('_id': game_id))
+        game_ref = Game.create_game_ref()
+        for game in user.game_list:
+            if game.get('game_id') == game_ref.get('game_id'):
+                user.game_list.remove(game)
+        user.game_list.append(game_ref)
+    return redirect(url_for('profile', username=user.name))
+        
+
+@app.route('/delete_game/<game_id>', methods=['POST'])
+def del_game_ref(game_id):
+    form = DeleteGame()
+    if form.validate_on_submit():
+        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+        for game in user.game_list:
+            if game.get(game_id) == game_id:
+                user.game_list.remove(game)
+                flash('Game Successfully Removed')
+    return redirect(url_for('profile', username=user.name))
+
+
+@app.route('/delete_review/<review_id>')
+def del_review(review_id):
+    form = DeleteReview()
+    if form.validate_on_submit():
+        user = User.from_mongo(**mongo.db.users.find_one({ "name": session.get('username') }))
+        review = Review.from_mongo(**mongo.db.reviews.find_one('_id': ObjectId(review_id)))
+
+        if user._id == review.author_id:
+            for del_review in user.reviews:
+                if del_review.get('_id') == review_id:
+                    user.reviews.remove(del_review)
+            user.update_user()
+            review.delete_review()
+            flash('Review Deleted')
+    return redirect(url_for('profile', username = user.name))
+
+
+
