@@ -44,7 +44,7 @@ def login():
                 session['email'] = current_user.email 
                 session['_id'] = str(current_user._id)
                 flash(f"{session['username']} has successfully logged in!")
-                return redirect(url_for('profile', user=current_user))
+                return redirect(url_for('profile', username=current_user.name))
         else:
             flash('Username Incorrect')
             redirect(url_for('login'))
@@ -81,23 +81,50 @@ def profile(username):
     """
     If statement prevents access to profile unless logged in. Consider using session cookie to hold boolean value - .is_logged_in
     """
-    if session.get('username') is not None:      
-        current_user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-        return render_template("user_profile.html", title="My Profile", user=current_user)
+    user = session.get('username')
+    if user is not None:      
+        if user == username:
+            current_user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+            return render_template("user_profile.html", title="My Profile", user=current_user)
+        else:
+            user = User.from_mongo(**mongo.db.users.find_one({'name': username}))
+            return render_template("user_profile.html", title=f"{user.name}'s Profile", user=user)
     else:
         flash('Please log in to access user profile')
         return redirect(url_for('login'))
 
 
-@app.route('/user/<username>/edit_profile', methods=['GET', 'POST'])
+@app.route('/user/<username>/edit_profile', methods=['GET','POST'])
 def edit_profile(username):
     # TODO: Finish this.
     form = EditProfileForm()
-    user = User.from_mongo(**mongo.db.users.find_one({"email": session.get('email')}))
-    if form.validate_on_submit():
-        pass
-    elif request.method == 'GET':
-        pass
+    session_name = session.get('username')
+    if session_name is not None and session_name == username: 
+        user = User.from_mongo(
+                **mongo.db.users.find_one(
+                    {"email": session.get('email')}
+                    )
+                )
+        if form.validate_on_submit():
+            user.email = form.email.data
+            user.name = form.username.data
+            user.bio = form.bio.data
+            user.update_user()
+            flash('Profile Updated Successfully')
+            return redirect(url_for('profile', username=user.name))
+
+        elif request.method == 'GET':
+            form.email.data = user.email
+            form.username.data = user.name
+            form.bio.data = user.bio
+            return render_template('edit_profile.html', 
+                                    form=form, 
+                                    user=user)
+    elif session_name != username:
+        return redirect(url_for('edit profile', username=session_name))
+    else:
+        flash('Please log in to edit your profile')
+        return redirect(url_for('login'))
 
 
 @app.route('/logout')
@@ -214,6 +241,7 @@ def add_review(game_name):
         flash('Please log in to post a review')
         return redirect(url_for('login'))
 
+
 @app.route('/user/<username>/games', methods=['GET'])
 def user_games(username):
     if session.get('username') is None:
@@ -227,13 +255,12 @@ def user_games(username):
                     )
                 )
         return render_template('user_games.html', 
-                games=current_user.game_list)
+                user=current_user)
     else:
         user = User.from_mongo(
                 **mongo.db.users.find_one({"name": username})
                 )
-        return render_template('user_games.html', games=user.game_list)
-
+        return render_template('user_games.html', user=user)
 
 
 @app.route('/user/<username>/reviews', methods=['GET'])
@@ -262,14 +289,18 @@ def review(review_id):
 def edit_review(review_id):
     form = EditReviewForm()
     review = Review.from_mongo(**mongo.db.reviews.find_one({ "_id": ObjectId(review_id) }))
-    user_email = session.get('email')
-    if form.validate_on_submit():
-        review.name = form.title.data
-        review.text = form.review_text.data
-        review.update_review()
-    elif request.method == "GET":
-        form.title.data = review.name
-        form.review_text.data = review.text
-    return render_template('edit_review.html', title='Edit Review', form=form)
+    user_name = session.get('username')
+    if user_name == review.author_ref['author_name']:
 
-
+        if form.validate_on_submit():
+            review.name = form.title.data
+            review.text = form.review_text.data
+            review.update_review()
+        elif request.method == "GET":
+            form.title.data = review.name
+            form.review_text.data = review.text
+        return render_template('edit_review.html', 
+                                title='Edit Review', 
+                                form=form)
+    else:
+        return redirect(url_for('review', review_id=review._id))
