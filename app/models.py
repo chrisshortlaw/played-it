@@ -301,6 +301,7 @@ class Review(BaseModel):
 
     def create_review_ref(self):
         review_dict = {}
+        review_dict['review_id'] = self._id
         review_dict['review_title'] = self.name
         review_dict['review_author'] = self.author        
         review_dict['review_author_id'] = self.author_id
