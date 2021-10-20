@@ -20,7 +20,7 @@
           {% endif %}
         </a>
       </li>
-      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=user.name }}>
+      <li class="tab-item"><a class="tab-link" href={{ url_for('user_reviews', username=user.name) }}>
           {% if session['username'] == user.name %}
           My Reviews
           {% else %}
