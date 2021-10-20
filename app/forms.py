@@ -182,3 +182,13 @@ class EditReviewForm(FlaskForm):
     submit = SubmitField('Edit Review', 
             render_kw={"class": "button is-block is-info is-large is-fullwidth"})
  
+class AddGameRef(FlaskForm):
+    submit = SubmitField('Add This Game', render_kw={ "class": "button is-medium is-primary" })
+
+
+class DeleteGame(FlaskForm):
+    submit = SubmitField('Delete This Game', render_kw={"class": "button is-medium is-warning" })
+
+
+class DeleteReview(FlaskForm):
+    submit = SubmitField('Delete This Review', render_kw={"class": "button is-medium is-warning"})
