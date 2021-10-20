@@ -59,7 +59,7 @@ class User(BaseModel):
         reviews: Optional["ReviewList"] 
     """
     
-    def __init__(self, name, email, _password, game_list = [], avatar_url = "", reviews = [], _id=None):
+    def __init__(self, name, email, _password, game_list = [], avatar_url = "", reviews = [], _id=None, bio=""):
         self.name = name
         self.email = email
         self._password = _password
@@ -67,6 +67,7 @@ class User(BaseModel):
         self.avatar_url = avatar_url
         self.reviews: List[Dict[str, str]] = reviews
         self._id = _id
+        self.bio = bio
 
     @property
     def password(self):
@@ -98,11 +99,11 @@ class User(BaseModel):
         return hashed_pass
         
     @classmethod
-    def create_user(cls, password, name, email, game_list=[], reviews=[]):
+    def create_user(cls, password, name, email, game_list=[], reviews=[], bio=""):
         hashed_pass = User.create_pass(password)
         avatar_name = urllib.parse.quote_plus(name)
         avatar_url = f'https://robohash.org/{avatar_name}.png'
-        return cls(name=name, email=email, _password=hashed_pass, game_list=game_list, avatar_url=avatar_url, reviews=reviews) 
+        return cls(name=name, email=email, _password=hashed_pass, game_list=game_list, avatar_url=avatar_url, reviews=reviews, bio=bio) 
 
     @classmethod
     def add_user(cls, password, name, email, db_loc=mongo.db.users, **kwargs):
@@ -193,9 +194,45 @@ class Game(BaseModel):
 
     @classmethod
     def add_game(cls, label, platform, year, genre, publisher, db_loc=mongo.db.games):
-        print(publisher)
-        publisher = mongo.db.publisher.find_one({ "_id": ObjectId(publisher) })
-        new_game = Game.create_game(label=label, platform=platform, year=year, genre=genre, publisher=publisher["label"], publisher_id=publisher["_id"])
+        """
+        Creates a game with the passed arguments. 
+        Uploads it to the db, label -> str, 
+        platform -> str, year -> int, 
+        genre-> str, publisher -> publisher object, 
+        db_loc: location of db collection
+
+        """
+        if isinstance(publisher, Publisher):
+            new_game = Game.create_game(label=label, 
+                        platform=platform, 
+                        year=year, 
+                        genre=genre, 
+                        publisher=publisher.label, 
+                        publisher_id=publisher._id)
+        elif type(publisher) is dict:
+            publisher = mongo.db.publisher.find_one(
+                            { "_id": ObjectId(str(publisher.get("_id" )) )})
+            if publisher and publisher.get("_id") is not None:
+                new_game = Game.create_game(label=label, 
+                                    platform=platform, 
+                                    year=year, 
+                                    genre=genre, 
+                                    publisher=publisher.get("label"), 
+                                    publisher_id=publisher.get("_id"))
+            else:
+                raise ValueError('Publisher does not exist on db')
+        elif type(publisher) is str:
+            publisher = mongo.db.publisher.find_one(
+                            { "_id": ObjectId(publisher.get("_id"))})
+            new_game = Game.create_game(label=label, 
+                                platform=platform, 
+                                year=year, 
+                                genre=genre, 
+                                publisher=publisher.get("label"), 
+                                publisher_id=publisher.get("_id"))
+        else:
+            raise TypeError('Param. Publisher must be str, Publisher, or dict')
+
         uploaded_game = db_loc.insert_one(new_game.to_mongo_dict())
         new_game._id = uploaded_game.inserted_id
         return new_game
@@ -242,6 +279,12 @@ class Publisher(BaseModel):
     def create_publisher(cls, label):
         name = str(label).replace(" ", "_").lower()
         return cls(label=label, name=name)
+
+    def upload_publisher(self, db_loc=mongo.db.publisher):
+        uploaded_pub = db_loc.insert_one(self.to_mongo_dict())
+        self._id = uploaded_pub.inserted_id
+        return self
+
 
 
 class Review(BaseModel):
