@@ -486,8 +486,10 @@ To deploy this page to Heroku, one should follow the following steps:
   ```
   heroku config: set SECRET_KEY=a_super_secret_key
   ```
-  If you prefer to use the GUI, you can set the configuration by clicking on the settings tab, clicking 'reveal config vars', and inserting the relevant variables.
+    If you prefer to use the GUI, you can set the configuration by clicking on the settings tab, clicking 'reveal config vars', and inserting the relevant variables.
+
 11. Once you have established that, you should push your most recent, working state/branch to your deployment branch.
+
 12. Heroku will take some time to build your app. Once it is done, you can view the app by navigating to the relevant app page. Heroku also has a GUI where you can lauch the app by clicking on the open app 'button'.
 
 ## Credits
