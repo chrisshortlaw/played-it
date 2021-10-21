@@ -2,7 +2,7 @@
 {% block content %}
 <div class="main-page grey-bg">
   <section class="hero is-medium is-bold played-hero">
-    <img url={{ url_for('static', file='../static/assets/igor-karimov-9AmKnNZw3GA-unsplash.jpg') }} alt = "'Playstation Game controller against purple backdrop' by Igor Karimov at Unsplash">
+    <img url="{{ url_for('static', filename='../static/assets/igor-karimov-9AmKnNZw3GA-unsplash.jpg') }}" alt="">
     <div class="hero-body">
       <div class="container has-text-centered">
           <h1 class="title has-text-white">
@@ -74,6 +74,8 @@
         <hr class="purple-divider">
         <br>
         <h3 class="subtitle is-2 has-text-centered">Your Games. Your Opinions.</h3>
+        <br>
+        <br>
     </section>
 </div>
 	     
