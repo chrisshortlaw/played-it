@@ -16,7 +16,8 @@ from flask_pymongo import PyMongo
 
 from app.database_mongo import mongo
 from app.models import User, Game, Review, ReviewList, GameList
-from app.forms import LoginForm, RegisterForm, ReviewForm, AddGameForm, EditProfileForm, EditReviewForm 
+from app.forms import LoginForm, RegisterForm, ReviewForm, AddGameForm, EditProfileForm, EditReviewForm, AddGameRef, DeleteGame, DeleteReview, UserReviewForm 
+
 
 @app.route("/")
 def main():
@@ -143,18 +144,31 @@ def games():
     Second query grabs a list of publishers.
     """
     games = mongo.db.games.find({})
+    
     return render_template('browse_games.html', games=games)
 
 
-@app.route('/games/<game_name>')
+@app.route('/games/<game_name>', methods=['GET', 'POST'])
 def game_page(game_name):
+    add_form = AddGameRef()
+    del_form = DeleteGame()
+    game_in_list = False
     game = Game.from_mongo(**mongo.db.games.find_one({"name": game_name}))
     if session.get('username') is not None:
         user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+        for game_ref in user.game_list:
+            if game_ref.get('game_id') == game._id:
+                game_in_list = True
     else:
         user = None 
-    # TODO: Rewrite this to account for publisher info in game document
-    return render_template('game.html', game_name=game_name, game=game, user=user)
+    return render_template('game.html', 
+                            game_name=game_name, 
+                            game=game, 
+                            user=user, 
+                            game_in_list=game_in_list, 
+                            add_form=add_form, 
+                            del_form=del_form
+                            )
 
 
 @app.route('/user/<username>/add_game', methods=['GET', 'POST'])
@@ -300,11 +314,12 @@ def review(review_id):
 def edit_review(review_id):
     """
     Allows users to edit reviews. Ensures the extended ref contained in the game object stays current by checking if the reference and the review share the same time. If they do, remove that review_ref and push the other review_ref on to the list.
+    There are two forms on the page. The first is the regular edit form. However, below each form there is an additional form which permits the user to delete this review.
     """
+    del_form = DeleteReview()
     form = EditReviewForm()
-    print(review_id)
     review = Review.from_mongo(**mongo.db.reviews.find_one({ "_id": ObjectId(review_id) }))
-    game = Game.from_mongo(**mongo.db.games.find_one({ "_id":review.game_id }))
+    game = Game.from_mongo(**mongo.db.games.find_one({ "_id":ObjectId(str(review.game_id)) }))
     user_name = session.get('username')
     if user_name == review.author_ref['author_name']:
         user = User.from_mongo(**mongo.db.users.find_one({ "name": user_name }))
@@ -326,55 +341,117 @@ def edit_review(review_id):
             user.reviews.append(review_ref)
             user.update_user()
             return redirect(url_for('review', review_id=review_id))
+
         elif request.method == "GET":
             form.title.data = review.name
             form.review_text.data = review.text
+
+        elif del_form.validate_on_submit():
+            if user._id == ObjectId(str(review.author_id)):
+                for del_review in user.reviews:
+                    if del_review.get('review_id') == ObjectId(review_id):
+                        user.reviews.remove(del_review)
+                user.update_user()
+                review.delete_review()
+                flash('Review Deleted')
+            return redirect(url_for('profile', username = user.name))
+    
     return render_template('edit_review.html.jinja', 
                                 title='Edit Review', 
                                 review_id=review_id,
-                                form=form)
+                                form=form,
+                                del_form=del_form)
 
 @app.route('/add_game_ref/<game_id>', methods=['POST'])
 def add_game_ref(game_id):
     form = AddGameRef()
     if form.validate_on_submit():
         user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-        game = Game.from_mongo(**mongo.db.games.find_one('_id': game_id))
-        game_ref = Game.create_game_ref()
+        game = Game.from_mongo(**mongo.db.games.find_one({'_id': ObjectId(str(game_id))}))
+        game_ref = game.create_game_ref()
         for game in user.game_list:
             if game.get('game_id') == game_ref.get('game_id'):
                 user.game_list.remove(game)
         user.game_list.append(game_ref)
+        user.update_user()
     return redirect(url_for('profile', username=user.name))
         
 
 @app.route('/delete_game/<game_id>', methods=['POST'])
 def del_game_ref(game_id):
     form = DeleteGame()
+    user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
     if form.validate_on_submit():
-        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-        for game in user.game_list:
-            if game.get(game_id) == game_id:
-                user.game_list.remove(game)
+        print('del_game_ref: deleting')
+        for user_game in user.game_list:
+            if user_game.get('game_id') == ObjectId(game_id):
+                user.game_list.remove(user_game)
                 flash('Game Successfully Removed')
-    return redirect(url_for('profile', username=user.name))
+        user.update_user()
+        return redirect(url_for('profile', username=user.name))
 
 
-@app.route('/delete_review/<review_id>')
+@app.route('/delete_review/<review_id>', methods=["POST"])
 def del_review(review_id):
+    user = User.from_mongo(**mongo.db.users.find_one({ "name": session.get('username') }))
+    review = Review.from_mongo(**mongo.db.reviews.find_one({'_id': ObjectId(review_id)}))
+
     form = DeleteReview()
     if form.validate_on_submit():
-        user = User.from_mongo(**mongo.db.users.find_one({ "name": session.get('username') }))
-        review = Review.from_mongo(**mongo.db.reviews.find_one('_id': ObjectId(review_id)))
-
-        if user._id == review.author_id:
+        print('form validated')
+        if user._id == ObjectId(review.author_id):
+            print('user id match')
             for del_review in user.reviews:
-                if del_review.get('_id') == review_id:
+                if str(del_review.get('_id')) == review_id:
+                    print('review located')
                     user.reviews.remove(del_review)
+            print('user updated')
             user.update_user()
             review.delete_review()
             flash('Review Deleted')
-    return redirect(url_for('profile', username = user.name))
+        return redirect(url_for('profile', username = user.name))
+    else:
+        return redirect(url_for('main'))
 
 
+@app.route('/user/<username>/add_review', methods=['GET', 'POST'])
+def add_user_review(username):
+    if session.get('username') is None:
+        return redirect('login')
+    user = User.from_mongo(
+               **mongo.db.users.find_one(
+                   {"name": session.get('username')}))
+
+    form = UserReviewForm()
+    if form.validate_on_submit():
+        game = Game.from_mongo(
+                **mongo.db.games.find_one(
+                    {'_id': ObjectId(form.game.data)})
+                )
+        author_ref = user.create_author_ref()
+        pub_date = str(datetime.now(timezone.utc))
+        game_ref = game.create_game_ref()
+            
+        new_review = Review.add_review(
+                    name=form.title.data,
+                    game=game.label,
+                    author=user.name, 
+                    author_id=user._id, 
+                    text=form.review_text.data, 
+                    game_id=form.game.data, 
+                    pub_date=pub_date, 
+                    game_ref=game_ref, 
+                    author_ref=author_ref
+                    )
+        flash('Review Successfully Posted')
+        review_ref = new_review.create_review_ref()
+        game.reviews.append(review_ref)
+        game.update_game()
+        game_ref = game.create_game_ref()
+        user.reviews.append(review_ref)
+        if game_ref not in user.game_list:
+            user.game_list.append(game_ref)
+        user.update_user()
+        return redirect(url_for('review', review_id=new_review._id))
+    return render_template('add_user_review.html.jinja', username=user.name, user=user, form=form)
 
