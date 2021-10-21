@@ -8,6 +8,7 @@
         <div class="columns">
           <div class="column has-text-centered">
             <h1 class="title" style="color: ghostwhite;">Browse Game Collection</h1><br>
+            <a href={{ url_for('add_game', username=session['username'] ) }} class="button is-link">Add a Game</a> 
           </div>
         </div>
         <div id="app" class="row columns is-multiline">
@@ -46,7 +47,7 @@
                       <p>{{ review['review_pub_date'] }}
                     {% endfor %}
                   {% else %}
-                    <p>Lorem Ipsum Dipsum Dolorem Blah</p>
+                    <p>No Reviews Yet. Why not write one?</p>
                   {% endif %}
                   <div class="background-icon"><span class="icon-twitter"></span></div>
                 </div>
