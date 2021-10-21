@@ -138,6 +138,30 @@ class ReviewForm(FlaskForm):
             render_kw={"class": "button is-block is-info is-large is-fullwidth"})
 
 
+games = mongo.db.games.find({})
+game_choices = [(game.get('_id'), game.get('label')) for game in games]
+
+
+class UserReviewForm(FlaskForm):
+    title = StringField('title', 
+            validators=[DataRequired()], 
+            render_kw={"class": "input", 
+                "placeholder": "Title"}
+            )
+    review_text = TextAreaField('text', 
+            validators=[InputRequired()], 
+            render_kw={"class": "input", 
+                "placeholder": "Your Review Here", 
+                "minlength": "2", 
+                "maxlength":"2000", 
+                "rows":"4", 
+                "cols":"70"}
+            )
+    game = SelectField('game', validators=[DataRequired()], choices=game_choices, render_kw={"class": "input"})
+    submit = SubmitField('Add Review', 
+            render_kw={"class": "button is-block is-info is-large is-fullwidth"})
+    
+
 class EditProfileForm(FlaskForm):
     username = StringField('username', 
             validators=[DataRequired()], 
@@ -187,8 +211,8 @@ class AddGameRef(FlaskForm):
 
 
 class DeleteGame(FlaskForm):
-    submit = SubmitField('Delete This Game', render_kw={"class": "button is-medium is-warning" })
+    submit = SubmitField('Delete This Game', render_kw={"class": "button is-medium is-danger" })
 
 
 class DeleteReview(FlaskForm):
-    submit = SubmitField('Delete This Review', render_kw={"class": "button is-medium is-warning"})
+    submit = SubmitField('Delete This Review', render_kw={"class": "button is-medium is-danger"})
