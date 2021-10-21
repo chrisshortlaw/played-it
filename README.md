@@ -289,6 +289,8 @@ The HTML produced by the library was found to be error free. A collection of ima
 
 CSS was passed through a CSS validator with no errors returned. Proof of validation can be found in the tests folder.
 
+For linting and PEP8 compliance, the Flake8 linter was used as part of my text editor. For this project, I used NeoVim with several plugins including a Flake8 linter.
+
 ### **Interesting Bugs / Problems**
 
 1. Circular imports
