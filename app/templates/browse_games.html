@@ -22,16 +22,8 @@
               </div>
               <div class="card-content">
                 <div class="media">
-                  <div class="media-left">
-                    <figure class="image is-48x48">
-                      <img src="card.avatar" alt="Image">
-                    </figure>
-                  </div>
                   <div class="media-content">
                     <p class="title is-4 no-padding"><a class='is-underlined' href={{ url_for('game_page', game_name=game.name) }}>{{game['label']}}</a></p>
-                    <p>
-                      <span class="title is-6">
-                        <a href=>{{game.label}}</a> </span> </p>
                     <p class="subtitle is-6">{{game.publisher}}</p>
                     <p class="subtitle is-6">{{ game['genre'] }}
                   </div>
