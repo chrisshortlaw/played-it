@@ -1,5 +1,13 @@
 # PlayedIt
 
+
+![played-it-response](/tests/played_it_html/am_i_responsive.png)
+
+
+---
+
+Find this App [here](https://shouldiplaythisgame.herokuapp.co)
+
 PlayedIt (Also known as ShouldIPlayThisGame, due to restrictions on Heroku) is a toy social network, made with python and flask on the backend. The front-end will use [Bulma](https://www.bulma.io) and JavaScript/JQuery.
 
 A user of PlayIt will be able to login and view a profile page, they will be able to tag games that they have played and leave reviews for those games. These reviews will be short (no more that say 180 characters a la Twitter) and have an liekert scale beside them indicating whether the user loved, liked, was neutral, disliked or hated a particular game. Users will be able to follow the posts of other users and, eventualy, cast votes for the most useful reviews.
@@ -271,19 +279,85 @@ The nature of the project meant that the code was subjected to extensive unit te
 
 Unit tests were conducted on the business logic of the application using Python's built in unittest library. These tests are documented and can be seen in tests.py at the top level of Github.
 
-In addition, a recording of a user registration, browsing, adding a game, adding a review, deleting a review and logging out was carried out using the Selenium IDE. A .side has been included in the tests folder for reproduction.
+_Tests.py Output (21-10-21):_
+
+```bash
+
+test_add_game (__main__.TestUser) ... ok
+test_add_review (__main__.TestUser) ... ok
+test_add_user (__main__.TestUser) ... ok
+test_check_user (__main__.TestUser) ... ok
+test_check_user_email (__main__.TestUser) ... ok
+test_class_from_mongo (__main__.TestUser) ... ok
+test_class_to_mongo (__main__.TestUser) ... ok
+test_game_retrieval (__main__.TestUser) ... ok
+test_load_existing_user (__main__.TestUser) ... ok
+test_make_user (__main__.TestUser) ... ok
+test_password (__main__.TestUser) ... ok
+test_update_review (__main__.TestUser)
+Test the update function of the update review. ... ok
+test_update_user (__main__.TestUser) ... ok
+test_user_delete (__main__.TestUser) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 11.660s
+
+OK
+
+```
+
+Manual Tests and automated browser tests of the app were carried out.
 
 These tests include:
-  * Accessing the app
-  * Registering a User
-  * Logging In
-  * Logging Out
-  * Adding a game
-  * Adding a review
-  * Deleting a review
-  * Removing a game from 'My Games'
-  * Editing my profile
+  * Accessing the app:
+
+      The app was deployed successfully and can be accessed at [shouldiplaythisgame.herokuapps.com](https://shouldiplaythisgame.herokuapp.com/)
+  
+  * Registering a User:
+      
+      A User can successfully register and be taken to their profile page. Attempts to enter invalid data or passwords that do not match result in an error message being displayed to the user. Successful registration redirects the User to their new profile and their new custom avatar.
+  
+  * Logging In:
+
+      The user must enter a valid email and password. An invalid email redirects the user to the registration page (they can navigate back to the login page easily). An invalid password prevents access. In the furture, it would be nice to implement a 'forgot password' feature using email or some form of 2 factor authentication. This will allow the user more feedback when they are logging in. It was not possible to implement such a feature at this time.
+
+  * Logging Out:
+
+    Clicking log out in the top right of the navbar, logs out the user and removes session cookies.
+
+  * Adding a game:
+
+    Users navigate to the my games page from their profile and can add games. Completing the form leads to a successful addition. The game appears on the User's profile and on the 'browse games' page.
+
+  * Adding an existing game:
+
+    The 'browse games' section permits the User to browse existing games and see samples of other User reviews. If a game is not in the User's 'My Games' list, the game's site will display a button bearing the label 'Add This Game' to the User. Clicking this adds the game to their list.
+
+  * Adding a review:
+
+    A user can successfully add a review.  The review appears on their profile page and appears on the game page. A successful addition akes teh User to the review page where the time, title, content, username and avatar can be seen.
+
+
+  * Editing and Deleting a review:
+
+    Clicking on their reviews in their profile brings the user to a card where they can edit the review. A button beneath the edit form is a link which brings the User to a page stating 'Are you sure?'. Clicking on the button on that page, deletes the review and removes it from the user's reviews.
+
+  * Removing a game from 'My Games':
+
+    Clicking on the 'My Games' section of the review page shows the user a list of games they have added. Clicking on the title of these games brings the User to the games page. A game that is in the User's 'My Games' will display a large, red 'Delete This Game' button. Clicking that, removes the game from the User's 'My Games'.
+
+
+  * Editing my profile:
+
+    Clicking on the 'Edit Profile' button brings the user to a form where they can change their username, their email, and write a short bio for display on their page.
+
   * Viewing the pages of other users
+
+    If a user sees a review they like, they can click on the author's name and be brought to the author's profile page. From their they can view their games, their reviews, their avatar and their bio. 
+
+
+_HTML & CSS_
+
 
 The HTML produced by the library was found to be error free. A collection of images confirming validation can be found in the [tests](tests/played_it_html) folder on the Github page.
 
@@ -503,6 +577,6 @@ The following projects were of great assistance, inspiration and I have emulated
 - [Bulma](https://bulma.io)
   Bulma is a css framework I used to add a certain style to my html/jinja files. The snippets of javascript were also taken from Bulma's sample.
 - [Building with Patterns: Extended Reference - Coupal & Alger](https://www.mongodb.com/blog/post/building-with-patterns-the-extended-reference-pattern)
-
+- [RoboHash](https://robohash.org) is an excellent, free service who provide custom avatars for apps such as this one.
 
 - Many thanks to my mentor, Seun Owonikoko, who gave sage advice on this project and its design.
