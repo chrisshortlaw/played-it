@@ -24,10 +24,10 @@
                 <span class="has-text-black">{{ game.label }}</span>
               </div>
               <br />
-              <label for="review" class="has-text-black">Review:</label>
+              <label for="review_text" class="has-text-black">Review:</label>
               <div class="field">
                 <div class="control">
-                  {{ form.review_text(size=32) }}
+                  {{ form.review_text() }}
                   {% for error in form.review_text.errors %}
                   <span class="has-text-danger">{{ error }}</span>
                   {% endfor %}

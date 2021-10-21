@@ -31,7 +31,7 @@
                           <label for="bio" class="has-text-black">About Me</label>
                           <div class="field">
                             <div class="control">
-                              {{ form.bio(size=64) }}
+                              {{ form.bio() }}
                               {% for error in form.bio.errors %}
                               <span class="has-text-danger">{{ error }}</span>
                               {% endfor %}
