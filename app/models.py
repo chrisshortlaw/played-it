@@ -223,7 +223,7 @@ class Game(BaseModel):
                 raise ValueError('Publisher does not exist on db')
         elif type(publisher) is str:
             publisher = mongo.db.publisher.find_one(
-                            { "_id": ObjectId(publisher.get("_id"))})
+                            { "_id": ObjectId(publisher)})
             new_game = Game.create_game(label=label, 
                                 platform=platform, 
                                 year=year, 
