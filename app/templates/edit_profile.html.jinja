@@ -9,7 +9,6 @@
                     <div class="box">
                        <form method="post" action="{{ url_for('edit_profile', username=session['username']) }}">
                           {{ form.hidden_tag() }}
-                          {{ form.csrf_token }}
                           <p class="has-text-black">Username</p>
                           <div class="field">
                             <div class="control">

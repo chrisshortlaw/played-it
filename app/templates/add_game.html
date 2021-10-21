@@ -9,7 +9,6 @@
           <div class="box">
             <form method="post" action="{{ url_for('add_game', username=session['username']) }}">
               {{ form.hidden_tag() }}
-              {{ form.csrf_token }}
               <label for="title" class="has-text-black">Game Title</label>
               <div class="field">
                 <div class="control">
