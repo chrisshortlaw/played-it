@@ -180,8 +180,7 @@ class EditProfileForm(FlaskForm):
                         validators=[Length(min=0,
                                            max=500,
                                            message='Review cannot be longer than 500 characters')],
-                        render_kw={"class": "input",
-                                   "alt": ""})
+                        render_kw={"class": "input", "rows": "4", "cols": "70"})
     email = EmailField('Email',
                        validators=[DataRequired()],
                        render_kw={"class": "input"})

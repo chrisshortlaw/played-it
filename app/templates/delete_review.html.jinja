@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+  {% block content %}
+    <div class="hero is-success is-fullheight">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <div class="column is-4 is-offset-4">
+                    <h3 class="title has-text-black">Delete Review</h3>
+                    <hr class="login-hr">
+                    <div class="box">
+                       <form method="post" action={{ url_for('del_review', review_id=review_id) }}>
+                          {{ form.hidden_tag() }}
+                          <label for="submit" class="has-text-black">Are You Sure?</label>
+                          {{ form.submit() }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  {% endblock %}
+ 

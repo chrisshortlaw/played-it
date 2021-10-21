@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
   {% block content %}
-    <section class="hero is-success is-fullheight">
+    <div class="hero is-success is-fullheight">
         <div class="hero-body">
             <div class="container has-text-centered">
                 <div class="column is-4 is-offset-4">
@@ -21,25 +21,20 @@
                           <label for="review_text" class="has-text-black">Text</label>
                           <div class="field">
                             <div class="control">
-                              {{ form.review_text(size=32) }}
+                              {{ form.review_text() }}
                               {% for error in form.review_text.errors %}
                               <span class="has-text-danger">{{ error }}</span>
                               {% endfor %}
 
                             </div>
                           </div>
+                          {{ form.submit() }}
+                          </form>
                         </div>
-                              {{ form.submit() }}
-                        </div>
-                        </form>
-                        <form method="post" action={{ url_for('edit_review', review_id=review_id) }}>
-                          {{ del_form.hidden_tag() }}
-                          {{ del_form.submit() }}
-                        </form>
                     </div>
-                  </div>
+                    <a href={{ url_for('del_review', review_id=review_id) }} class="button is-medium is-danger">Delete This Review</a>
+                </div>
             </div>
-        </div>
-    </section>
+      </div>
   {% endblock %}
  
