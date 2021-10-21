@@ -4,9 +4,9 @@
 
 <section class="hero is-medium" style="background: url('../static/assets/placeholder_berserk.jpg') center/cover no-repeat fixed">
   <div class="hero-body has-text-white">
-    <p class="title is-2 has-text-white-ter">
+    <h2 class="title is-2 has-text-white-ter">
       {{ game.label }}
-    </p>
+    </h2>
     <p class="subtitle is-4 has-text-white-ter">
       Publisher: {{ game.publisher }} 
     </p>
@@ -26,7 +26,7 @@
   <div class="container">
     <div class="buttons">
         {% if game_in_list == True %}
-          <form method="post" action={{ url_for('del_game_ref', game_id=game._id) }}>
+          <form method="post" class="del_add_game" action={{ url_for('del_game_ref', game_id=game._id) }}>
             {{ del_form.hidden_tag() }}
             {{ del_form.submit() }}
           </form>
@@ -37,8 +37,8 @@
           </form>
         {% endif %}
       {#  Link to Store Page contained below. Can be retieved from api or affiliate links  #}
-      <a href="#"><button class="button is-medium is-link">Buy This Now</button></a>
-      <button class="button is-block is-medium"><a href={{ url_for('add_review', game_name=game_name) }}>Add a Review</a></button>
+      <a href="#" class="button is-medium is-link">Buy This Now</a>
+      <a href={{ url_for('add_review', game_name=game_name) }} class="button is-block is-medium">Add a Review</a>
     </div>
   </div>
 </section>
@@ -70,7 +70,7 @@
             {% endif %}
             <p class="card-footer-item">
               <span>
-                <a href={{ url_for('add_review', game_name=game.name) }}><button class="button">Write a review</button></a>
+                <a href={{ url_for('add_review', game_name=game.name) }} class="button">Write a review</a>
               </span>
             </p>
             <p class="card-footer-item">
@@ -88,7 +88,7 @@
     <div class="container">
       <div class="has-black-text">No reviews yet. Why not write one?</div>
       <a href={{ url_for('add_review', game_name=game_name) }} class="button">
-        <span class="">
+        <span>
           <i class="fa fa-pencil-square" aria-hidden="true"></i>
         </span>
         Add A Review

@@ -85,7 +85,7 @@
 	</header>
   <main>
 
-    <article class="message is-primary flash-container">
+    <div class="message is-primary flash-container">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
       <div class="message-body">
@@ -97,7 +97,7 @@
     </div>
     {% endif %}
     {% endwith %}
-  </article>
+  </div>
     
       {% block content %}
       {% endblock content %}
