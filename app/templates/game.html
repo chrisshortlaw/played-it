@@ -22,8 +22,26 @@
     </p>
   </div>
 </section>
-<br />
-<button class="button is-block is-primary is-fullwidth is-medium"><a href={{ url_for('add_review', game_name=game_name) }}>Add a Review</a></button>
+<section class="section">
+  <div class="container">
+    <div class="buttons">
+        {% if game_in_list == True %}
+          <form method="post" action={{ url_for('del_game_ref', game_id=game._id) }}>
+            {{ del_form.hidden_tag() }}
+            {{ del_form.submit() }}
+          </form>
+        {% else %}
+          <form method="post" action={{ url_for('add_game_ref', game_id=game._id) }}>
+            {{ add_form.hidden_tag() }}
+            {{ add_form.submit() }}
+          </form>
+        {% endif %}
+      {#  Link to Store Page contained below. Can be retieved from api or affiliate links  #}
+      <a href="#"><button class="button is-medium is-link">Buy This Now</button></a>
+      <button class="button is-block is-medium"><a href={{ url_for('add_review', game_name=game_name) }}>Add a Review</a></button>
+    </div>
+  </div>
+</section>
 
 <section class="section is-medium">
   <div class="row columns is-multiline">
@@ -36,7 +54,7 @@
                 {{ review['review_text'] }}
               </p>
               <p class="subtitle">
-              {{ review["review_author"] }} 
+              <a href={{ url_for('profile', username=review["review_author"]) }}>{{ review["review_author"] }}</a>
               </p>
             </div>
           <footer class="card-footer">
@@ -44,7 +62,7 @@
               {% if user.name == review["review_author"] %}
             <p class="card-footer-item">
               <span>
-                <a href={{ url_for('edit_review', review_id=review['review_author_id']) }}>Edit This Review</a>
+                <a href={{ url_for('edit_review', review_id=review['review_id']) }}>Edit This Review</a>
               </span>
             </p>
             {% else %}
