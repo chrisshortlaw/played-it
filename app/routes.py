@@ -33,18 +33,22 @@ def login():
     if form.validate_on_submit():
 
         user_doc = mongo.db.users.find_one({"email": f"{ form.email.data }"})
-        if user_doc.get("email") is not None:
-            if check_password_hash(user_doc.get('_password'),
-                                    form.password.data):
-                current_user = User.from_mongo(**user_doc)
-                session['username'] = current_user.name
-                session['email'] = current_user.email 
-                session['_id'] = str(current_user._id)
-                flash(f"{session['username']} has successfully logged in!")
-                return redirect(url_for('profile', username=current_user.name))
+        if user_doc:
+            if user_doc.get("email") is not None:
+                if check_password_hash(user_doc.get('_password'),
+                                       form.password.data):
+                    current_user = User.from_mongo(**user_doc)
+                    session['username'] = current_user.name
+                    session['email'] = current_user.email
+                    session['_id'] = str(current_user._id)
+                    flash(f"{session['username']} has successfully logged in!")
+                    return redirect(url_for('profile', username=current_user.name))
+            else:
+                flash('Username Incorrect')
+                return redirect(url_for('login'))
         else:
-            flash('Username Incorrect')
-            redirect(url_for('login'))
+            flash('No such user')
+            return redirect(url_for('register'))
     return render_template("login.html", title="Sign In", form=form)
 
 
