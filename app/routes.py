@@ -364,54 +364,65 @@ def edit_review(review_id):
 
 @app.route('/add_game_ref/<game_id>', methods=['POST'])
 def add_game_ref(game_id):
+
     form = AddGameRef()
-    if form.validate_on_submit():
-        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-        game = Game.from_mongo(**mongo.db.games.find_one({'_id': ObjectId(str(game_id))}))
-        game_ref = game.create_game_ref()
-        for game in user.game_list:
-            if game.get('game_id') == game_ref.get('game_id'):
-                user.game_list.remove(game)
-        user.game_list.append(game_ref)
-        user.update_user()
-    return redirect(url_for('profile', username=user.name))
-        
+    if session.get('username') is not None:
+        if form.validate_on_submit():
+            user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+            game = Game.from_mongo(**mongo.db.games.find_one({'_id': ObjectId(str(game_id))}))
+            game_ref = game.create_game_ref()
+            for game in user.game_list:
+                if game.get('game_id') == game_ref.get('game_id'):
+                    user.game_list.remove(game)
+            user.game_list.append(game_ref)
+            user.update_user()
+        return redirect(url_for('profile', username=user.name))
+    else:
+        flash('Please log in to continue')
+        return redirect(url_for('login'))
 
 @app.route('/delete_game/<game_id>', methods=['POST'])
 def del_game_ref(game_id):
-    form = DeleteGame()
-    user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
-    if form.validate_on_submit():
-        print('del_game_ref: deleting')
-        for user_game in user.game_list:
-            if user_game.get('game_id') == ObjectId(game_id):
-                user.game_list.remove(user_game)
-                flash('Game Successfully Removed')
-        user.update_user()
-        return redirect(url_for('profile', username=user.name))
+    if session.get('username') is not None:
+        form = DeleteGame()
+        user = User.from_mongo(**mongo.db.users.find_one({"name": session.get('username')}))
+        if form.validate_on_submit():
+            print('del_game_ref: deleting')
+            for user_game in user.game_list:
+                if user_game.get('game_id') == ObjectId(game_id):
+                    user.game_list.remove(user_game)
+                    flash('Game Successfully Removed')
+            user.update_user()
+            return redirect(url_for('profile', username=user.name))
+    else:
+        flash('Please log in to continue')
+        return redirect(url_for('login'))
 
 
 @app.route('/delete_review/<review_id>', methods=["POST"])
 def del_review(review_id):
-    user = User.from_mongo(**mongo.db.users.find_one({ "name": session.get('username') }))
-    review = Review.from_mongo(**mongo.db.reviews.find_one({'_id': ObjectId(review_id)}))
+    if session.get('username') is not None:
+        user = User.from_mongo(**mongo.db.users.find_one({ "name": session.get('username') }))
+        review = Review.from_mongo(**mongo.db.reviews.find_one({'_id': ObjectId(review_id)}))
 
-    form = DeleteReview()
-    if form.validate_on_submit():
-        print('form validated')
-        if user._id == ObjectId(review.author_id):
-            print('user id match')
-            for del_review in user.reviews:
-                if str(del_review.get('_id')) == review_id:
-                    print('review located')
-                    user.reviews.remove(del_review)
-            print('user updated')
-            user.update_user()
-            review.delete_review()
-            flash('Review Deleted')
-        return redirect(url_for('profile', username = user.name))
+        form = DeleteReview()
+        if form.validate_on_submit():
+            print('form validated')
+            if user._id == ObjectId(review.author_id):
+                print('user id match')
+                for del_review in user.reviews:
+                    if str(del_review.get('_id')) == review_id:
+                        print('review located')
+                        user.reviews.remove(del_review)
+                print('user updated')
+                user.update_user()
+                review.delete_review()
+                flash('Review Deleted')
+            return redirect(url_for('profile', username = user.name))
+        else:
+            return redirect(url_for('main'))
     else:
-        return redirect(url_for('main'))
+        return redirect(url_for('login'))
 
 
 @app.route('/user/<username>/add_review', methods=['GET', 'POST'])
