@@ -33,6 +33,10 @@
                               {{ form.submit() }}
                         </div>
                         </form>
+                        <form method="post" action={{ url_for('edit_review', review_id=review_id) }}>
+                          {{ del_form.hidden_tag() }}
+                          {{ del_form.submit() }}
+                        </form>
                     </div>
                   </div>
             </div>
