@@ -52,15 +52,12 @@
 
     <div class="content">
       {% if session['username'] == user.name %}
-      <button class="button is-block is-medium">
-            <a href={{ url_for('edit_profile', username=user.name) }}>
+            <a href={{ url_for('edit_profile', username=user.name) }} class="button is-block is-medium">
           Edit Profile
         </a>
-      </button>
       {% else %}
       {% endif %}
       <br>
-      <time datetime=>11:09 PM - 1 Jan 2016</time>
     </div>
   </div>
 </div>
