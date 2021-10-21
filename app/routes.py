@@ -76,7 +76,8 @@ def register():
     return render_template("register.html", 
                 title="Registration", 
                 form=form)
-            
+
+    
 @app.route('/user/<username>')
 def profile(username):
     """
@@ -111,6 +112,10 @@ def edit_profile(username):
             user.name = form.username.data
             user.bio = form.bio.data
             user.update_user()
+            session.pop('username')
+            session.pop('email')
+            session['username'] = user.name
+            session['email'] = user.email
             flash('Profile Updated Successfully')
             return redirect(url_for('profile', username=user.name))
 

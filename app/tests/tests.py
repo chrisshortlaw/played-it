@@ -1,8 +1,8 @@
 import unittest
-from app import app
+from app import app, mongo
 from app.models import User, Game, Review, Publisher
 from dataclasses import asdict
-from app.database_mongo import mongo
+#from app.database_mongo import mongo
 from bson import ObjectId
 
 class TestUser(unittest.TestCase):
@@ -68,6 +68,11 @@ class TestUser(unittest.TestCase):
         else:
             another_user = User.add_user(password="pass", name="new_user2", email="fake2@fakemail.com", db_loc=mongo.db.tests)
         check_duplicate = list(mongo.db.tests.find({ "email": "fake2@fakemail.com" }))
+        self.assertTrue(len(check_duplicate) == 1, 'Check Duplicate: Fail - Multiple Users detected.')
+        session = {}
+        self.assertTrue(check_password_hash(check_duplicate[0]['_password'], 'pass'))
+        session['username'] = check_duplicate[0]['name']
+        session['_id'] = check_duplicate[0]['_id']
 
 
     def test_add_game(self):
