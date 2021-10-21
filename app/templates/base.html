@@ -84,25 +84,26 @@
 
 	</header>
   <main>
-    <div class="container flash-container">
-      {% with messages = get_flashed_messages() %}
-      {% if messages %}
-      <div class="notification is-primary">
+
+    <article class="message is-primary flash-container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="message-body">
         <ul class="flashes">
           {% for message in messages %}
           <li>{{ message }}</li>
           {% endfor %}
         </ul>
-      </div>
-        {% endif %}
-        {% endwith %}
     </div>
-
+    {% endif %}
+    {% endwith %}
+  </article>
+    
       {% block content %}
       {% endblock content %}
   </main>
 	<script src="{{url_for('static', filename='js/script.js')}}"></script>
-
+  <script src="~bulma-carousel/dist/js/bulma-carousel.min.js"></script>
 	{% block script %}
 	{% endblock script %}
 
