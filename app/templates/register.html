@@ -9,7 +9,6 @@
                     <div class="box">
                        <form method="post" action="{{ url_for('register') }}" id="register-form">
                           {{ form.hidden_tag() }}
-                          {{ form.csrf_token }}
                           <label for="email" class="has-text-black">Enter your Email</label>
                           <div class="field">
                             <div class="control">
