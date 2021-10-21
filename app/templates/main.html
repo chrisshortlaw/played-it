@@ -31,7 +31,7 @@
                         <div class="content">
                             <h4>Share the games you have played.</h4>
                             <p>Let others know what games you have played and share your game library!</p>
-                            <p><a href="#">Browse Games</a></p>
+                            <p><a href={{ url_for('games') }}>Browse Games</a></p>
                         </div>
                     </div>
                 </div>
@@ -45,7 +45,7 @@
                         <div class="content">
                           <h4>Review the games you have played.</h4>
                           <p>Let others know what you liked and disliked and if this game is worth playing.</p>
-                            <p><a href="#">Check out some reviews</a></p>
+                          <p><a href={{ url_for('game_page', game_name="fake_game3") }}>Check out some reviews</a></p>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                         <div class="content">
                             <h4>Discover new games for you to play!</h4>
                             <p>Use the reviews and collections of other User to help you find your next game to play.</p>
-                            <p><a href="#">Learn more</a></p>
+                            <p><a href={{ url_for('register') }}>Register Now</a></p>
                         </div>
                     </div>
                 </div>
@@ -73,99 +73,5 @@
         <hr class="purple-divider">
         <br>
         <h3 class="subtitle is-2 has-text-centered">Your Games. Your Opinions.</h3>
-        <div class="sandbox section">
-            <div class="tile is-ancestor">
-                <div class="tile is-vertical is-8">
-                    <div class="tile">
-                        <div class="tile is-parent is-vertical">
-                            <article class="tile is-child notification is-white is-shady">
-                                <p class="title">Vertical tiles</p>
-                                <p class="subtitle">Top box</p>
-                            </article>
-                            <article class="tile is-child notification is-white is-shady">
-                                <p class="title">Vertical tiles</p>
-                                <p class="subtitle">Bottom box</p>
-                            </article>
-                        </div>
-                        <div class="tile is-parent">
-                            <article class="tile is-child notification is-white is-shady">
-                                <p class="title">Middle box</p>
-                                <p class="subtitle">With an image</p>
-                                <figure class="image is-4by3">
-                                    <img src="https://picsum.photos/640/480/?random" alt="Description">
-                                </figure>
-                            </article>
-                        </div>
-                    </div>
-                    <div class="tile is-parent">
-                        <article class="tile is-child notification is-white is-shady">
-                            <p class="title">Wide column</p>
-                            <p class="subtitle">Aligned with the right column</p>
-                            <div class="content">
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
-                            </div>
-                        </article>
-                    </div>
-                </div>
-                <div class="tile is-parent">
-                    <article class="tile is-child notification is-white is-shady">
-                        <div class="content">
-                            <p class="title">Tall column</p>
-                            <p class="subtitle">With even more content</p>
-                            <div class="content">
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam semper diam at erat pulvinar, at pulvinar felis blandit. Vestibulum volutpat tellus diam, consequat gravida libero rhoncus ut. Morbi maximus, leo sit amet vehicula
-                                eleifend, nunc dui porta orci, quis semper odio felis ut quam.</p>
-                                <p>Suspendisse varius ligula in molestie lacinia. Maecenas varius eget ligula a sagittis. Pellentesque interdum, nisl nec interdum maximus, augue diam porttitor lorem, et sollicitudin felis neque sit amet erat. Maecenas imperdiet
-                                felis nisi, fringilla luctus felis hendrerit sit amet. Aenean vitae gravida diam, finibus dignissim turpis. Sed eget varius ligula, at volutpat tortor.</p>
-                                <p>Integer sollicitudin, tortor a mattis commodo, velit urna rhoncus erat, vitae congue lectus dolor consequat libero. Donec leo ligula, maximus et pellentesque sed, gravida a metus. Cras ullamcorper a nunc ac porta. Aliquam
-                                ut aliquet lacus, quis faucibus libero. Quisque non semper leo.</p>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </div>
-            <div class="tile is-ancestor">
-                <div class="tile is-parent">
-                    <article class="tile is-child notification is-white is-shady">
-                        <p class="title">Side column</p>
-                        <p class="subtitle">With some content</p>
-                        <div class="content">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
-                        </div>
-                    </article>
-                </div>
-                <div class="tile is-parent is-8">
-                    <article class="tile is-child notification is-white is-shady">
-                        <p class="title">Main column</p>
-                        <p class="subtitle">With some content</p>
-                        <div class="content">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-            <div class="tile is-ancestor">
-                <div class="tile is-parent is-8">
-                    <article class="tile is-child notification is-white is-shady">
-                        <p class="title">Murphy's law</p>
-                        <p class="subtitle">Anything that can go wrong will go wrong</p>
-                        <div class="content">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
-                        </div>
-                    </article>
-                </div>
-                <div class="tile is-parent">
-                    <article class="tile is-child notification is-white is-shady">
-                        <p class="title">Main column</p>
-                        <p class="subtitle">With some content</p>
-                        <div class="content">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </div>
-    </section>
-  </div>
 	     
 {% endblock content %}
