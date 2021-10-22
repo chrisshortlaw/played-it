@@ -42,7 +42,8 @@
     </div>
     <div id="app" class="row columns is-multiline">
       {% for game in user.game_list %}
-        <div class="card large">
+      <div class="column is-4">
+        <div class="card large game-card">
           <div class="card-image">
             <figure class="image is-16by9">
               <img src="{{ url_for('static', filename= '../static/assets/placeholder_berserk.jpg') }}" alt="PlaceHolder Image: Black Knight with sword by the Moon">
@@ -60,6 +61,7 @@
             </div>
           </div>
         </div>
+      </div>
         {% endfor %}
       </div>
     </div>
