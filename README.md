@@ -6,7 +6,7 @@
 
 ---
 
-Find this App [here](https://shouldiplaythisgame.herokuapp.co)
+Find this App [here](https://shouldiplaythisgame.herokuapp.com)
 
 PlayedIt (Also known as ShouldIPlayThisGame, due to restrictions on Heroku) is a toy social network, made with python and flask on the backend. The front-end will use [Bulma](https://www.bulma.io) and JavaScript/JQuery.
 
