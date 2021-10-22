@@ -189,6 +189,11 @@ A User must be logged in to use the app features, although some limited browsing
 
 #### *User Interaction
 
+The wireframe for the app is as follows. Interaction centers around the profile page and the game page. Simple forms are used to upload data.
+
+![Wireframes](/app/static/played_it_wireframe.pdf)
+
+
 ##### *Create
 
 Users create games and reviews by entering data into html forms. These forms are made with a combination of html & css (mainly relying on the [Bulma.io](https://bulma.io/) framework), jinja templates and flask-wtforms. The relevant forms can be found in the templates folder: add_review.html, add_user_review.html.jinja, register.html and add_game.html 
@@ -578,5 +583,7 @@ The following projects were of great assistance, inspiration and I have emulated
   Bulma is a css framework I used to add a certain style to my html/jinja files. The snippets of javascript were also taken from Bulma's sample.
 - [Building with Patterns: Extended Reference - Coupal & Alger](https://www.mongodb.com/blog/post/building-with-patterns-the-extended-reference-pattern)
 - [RoboHash](https://robohash.org) is an excellent, free service who provide custom avatars for apps such as this one.
+- Joystick ICon was made by FreePik from [flatiron](www.flatiron.com)
+- Main Page Hero Image was by [Igor Karimov at Unsplash.](https://unsplash.com/@ingvar_erik?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)
 
 - Many thanks to my mentor, Seun Owonikoko, who gave sage advice on this project and its design.
