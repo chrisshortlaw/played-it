@@ -44,11 +44,11 @@ def login():
                     flash(f"{session['username']} has successfully logged in!")
                     return redirect(url_for('profile', username=current_user.name))
             else:
-                flash('Username Incorrect')
+                flash('Email Incorrect')
                 return redirect(url_for('login'))
         else:
-            flash('No such user')
-            return redirect(url_for('register'))
+            flash('Email Incorrect')
+            return redirect(url_for('login'))
     return render_template("login.html", title="Sign In", form=form)
 
 
@@ -310,8 +310,10 @@ def user_reviews(username):
 
 @app.route('/review/<review_id>', methods=['GET'])
 def review(review_id):
-    review = mongo.db.reviews.find_one({"_id": ObjectId(review_id) })
-    return render_template('review.html.jinja', title="Review", review=review)
+    review = mongo.db.reviews.find_one({"_id": ObjectId(str(review_id))})
+    return render_template('review.html.jinja',
+                           title="Review", 
+                           review=review)
 
 
 @app.route('/review/<review_id>/edit_review', methods=['GET', 'POST'])
@@ -353,10 +355,10 @@ def edit_review(review_id):
                 form.review_text.data = review.text
 
         return render_template('edit_review.html.jinja',
-                            title='Edit Review',
-                            review_id=review_id,
-                            form=form
-                            )
+                               title='Edit Review',
+                               review_id=review_id,
+                               form=form
+                               )
 
 
 @app.route('/add_game_ref/<game_id>', methods=['POST'])
