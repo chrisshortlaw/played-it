@@ -1,5 +1,0 @@
-env.py
-config.py
-./app/__pycache__/**
-./app/_load-data.py
-
